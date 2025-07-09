@@ -1,0 +1,6 @@
+# This directory contains platform-specific storage adapters
+# Files moved here:
+# - adapter-react-native.ts (from react-native-storage.ts)
+# - adapter-browser.ts (from browser-storage.ts)
+# - adapter-node.ts (from node-storage.ts)
+# - adapter-postgresql.ts (from postgresql-storage.ts) 

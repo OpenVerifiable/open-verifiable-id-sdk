@@ -1,0 +1,5 @@
+# This directory is for colocated trust registry tests
+# Examples:
+# - client.test.ts
+# - types.test.ts
+# - adapters/ (if adapters exist) 

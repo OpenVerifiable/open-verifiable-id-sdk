@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/sdk-configuration.schema.json",
+  "title": "Open Verifiable ID SDK Configuration",
+  "description": "Validates objects used to configure the SDK at runtime (maps to SDKConfiguration interface).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "environment", "platform", "features", "security"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production"]
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["node", "browser", "react-native", "electron", "worker"]
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trustRegistry",
+        "schemaRegistry",
+        "carbonAwareness",
+        "biometricAuth",
+        "offlineCache"
+      ],
+      "properties": {
+        "trustRegistry": { "type": "boolean" },
+        "schemaRegistry": { "type": "boolean" },
+        "carbonAwareness": { "type": "boolean" },
+        "biometricAuth": { "type": "boolean" },
+        "offlineCache": { "type": "boolean" }
+      }
+    },
+    "endpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaRegistry": { "type": "string", "format": "uri" },
+        "trustRegistry": { "type": "string", "format": "uri" },
+        "carbonService": { "type": "string", "format": "uri" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encryptionLevel", "requireBiometric", "keyStorageType"],
+      "properties": {
+        "encryptionLevel": { "type": "string", "enum": ["standard", "high"] },
+        "requireBiometric": { "type": "boolean" },
+        "keyStorageType": { "type": "string", "enum": ["file", "keychain", "hardware"] }
+      }
+    }
+  }
+} 

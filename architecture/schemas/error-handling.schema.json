@@ -1,0 +1,305 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/error-handling.schema.json",
+  "title": "Error Handling Configuration",
+  "description": "Configuration for error handling and recovery strategies per ADR-0012",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "retryConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic retry for failed operations"
+        },
+        "maxAttempts": { 
+          "type": "integer", 
+          "minimum": 1,
+          "maximum": 10,
+          "default": 3,
+          "description": "Maximum number of retry attempts"
+        },
+        "baseDelay": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 1000,
+          "description": "Base delay between retries in milliseconds"
+        },
+        "maxDelay": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 30000,
+          "description": "Maximum delay between retries in milliseconds"
+        },
+        "backoffMultiplier": { 
+          "type": "number", 
+          "minimum": 1,
+          "maximum": 5,
+          "default": 2,
+          "description": "Multiplier for exponential backoff"
+        },
+        "retryableErrors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["network", "timeout", "rate_limit"],
+          "description": "Error types that should trigger retries"
+        },
+        "nonRetryableErrors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["validation", "authentication", "authorization"],
+          "description": "Error types that should not trigger retries"
+        }
+      }
+    },
+    "circuitBreaker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Enable circuit breaker pattern"
+        },
+        "failureThreshold": { 
+          "type": "integer", 
+          "minimum": 1,
+          "default": 5,
+          "description": "Number of failures before opening circuit"
+        },
+        "recoveryTimeout": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 60000,
+          "description": "Time to wait before attempting recovery in milliseconds"
+        },
+        "halfOpenMaxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "Maximum attempts in half-open state"
+        },
+        "monitoringWindow": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60000,
+          "description": "Time window for failure counting in milliseconds"
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Enable error telemetry collection"
+        },
+        "endpoint": { 
+          "type": "string", 
+          "format": "uri",
+          "description": "Telemetry endpoint URL"
+        },
+        "batchSize": { 
+          "type": "integer", 
+          "minimum": 1,
+          "default": 100,
+          "description": "Number of errors to batch before sending"
+        },
+        "batchTimeout": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 5000,
+          "description": "Maximum time to wait before sending batch in milliseconds"
+        },
+        "includeStackTraces": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include stack traces in telemetry data"
+        },
+        "includeContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include error context in telemetry data"
+        },
+        "samplingRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1.0,
+          "description": "Percentage of errors to send (1.0 = 100%)"
+        }
+      }
+    },
+    "gracefulDegradation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Enable graceful degradation strategies"
+        },
+        "fallbackStrategies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["cache", "offline", "reduced-functionality", "alternative-provider"]
+          },
+          "default": ["cache", "offline"],
+          "description": "Available fallback strategies"
+        },
+        "priority": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Priority order for fallback strategies"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10000,
+          "description": "Timeout for fallback strategy execution in milliseconds"
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["error", "warn", "info", "debug"],
+          "default": "error",
+          "description": "Minimum log level for errors"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "text", "structured"],
+          "default": "json",
+          "description": "Log format for error messages"
+        },
+        "includeMetadata": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include error metadata in logs"
+        },
+        "maskSensitiveData": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mask sensitive data in error logs"
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autoRecovery": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic error recovery"
+        },
+        "recoveryStrategies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": true
+              },
+              "maxAttempts": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              },
+              "timeout": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 5000
+              }
+            }
+          },
+          "description": "Recovery strategies for different error types"
+        },
+        "userNotification": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Notify users of recovery attempts"
+            },
+            "methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["console", "notification", "callback"]
+              },
+              "default": ["console"],
+              "description": "Methods for user notification"
+            }
+          }
+        }
+      }
+    },
+    "monitoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable error monitoring and alerting"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["error-rate", "retry-rate", "circuit-breaker-status", "recovery-success-rate"]
+          },
+          "default": ["error-rate", "retry-rate"],
+          "description": "Error metrics to collect"
+        },
+        "alerts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "errorRateThreshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.1,
+              "description": "Alert when error rate exceeds this threshold"
+            },
+            "retryRateThreshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5,
+              "description": "Alert when retry rate exceeds this threshold"
+            },
+            "circuitBreakerOpenThreshold": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1,
+              "description": "Alert when this many circuit breakers are open"
+            }
+          }
+        }
+      }
+    }
+  }
+} 

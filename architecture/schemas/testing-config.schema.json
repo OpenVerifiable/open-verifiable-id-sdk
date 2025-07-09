@@ -1,0 +1,281 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/testing-config.schema.json",
+  "title": "Testing Configuration",
+  "description": "Configuration for SDK testing and validation per ADR-0009",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["testEnvironment"],
+  "properties": {
+    "testEnvironment": {
+      "type": "string",
+      "enum": ["unit", "integration", "e2e", "performance", "security"],
+      "description": "Type of testing environment"
+    },
+    "coverageThreshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "statements": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 100,
+          "default": 90,
+          "description": "Minimum statement coverage percentage"
+        },
+        "branches": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 100,
+          "default": 80,
+          "description": "Minimum branch coverage percentage"
+        },
+        "functions": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 100,
+          "default": 90,
+          "description": "Minimum function coverage percentage"
+        },
+        "lines": { 
+          "type": "number", 
+          "minimum": 0, 
+          "maximum": 100,
+          "default": 90,
+          "description": "Minimum line coverage percentage"
+        }
+      }
+    },
+    "mockServices": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cheqd": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Mock Cheqd network services"
+        },
+        "trustRegistry": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Mock trust registry services"
+        },
+        "schemaRegistry": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Mock schema registry services"
+        },
+        "carbonService": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mock carbon impact services"
+        },
+        "biometricAuth": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mock biometric authentication"
+        }
+      }
+    },
+    "performanceThresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "didCreation": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 1000,
+          "description": "Maximum DID creation time in milliseconds"
+        },
+        "credentialIssuance": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 2000,
+          "description": "Maximum credential issuance time in milliseconds"
+        },
+        "credentialVerification": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 500,
+          "description": "Maximum credential verification time in milliseconds"
+        },
+        "keyGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100,
+          "description": "Maximum key generation time in milliseconds"
+        },
+        "signing": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 50,
+          "description": "Maximum signing operation time in milliseconds"
+        }
+      }
+    },
+    "securityTesting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable security testing"
+        },
+        "vulnerabilityScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable vulnerability scanning"
+        },
+        "cryptographicValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable cryptographic validation tests"
+        },
+        "inputValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable input validation security tests"
+        },
+        "timingAttackTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable timing attack detection tests"
+        }
+      }
+    },
+    "testData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "useFixtures": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use predefined test fixtures"
+        },
+        "fixturePath": {
+          "type": "string",
+          "default": "./test/fixtures",
+          "description": "Path to test fixtures directory"
+        },
+        "generateRandomData": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate random test data"
+        },
+        "dataSize": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "small": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10,
+              "description": "Small dataset size"
+            },
+            "medium": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 100,
+              "description": "Medium dataset size"
+            },
+            "large": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1000,
+              "description": "Large dataset size"
+            }
+          }
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outputFormats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["json", "xml", "html", "text", "junit"]
+          },
+          "default": ["json", "html"],
+          "description": "Test report output formats"
+        },
+        "outputPath": {
+          "type": "string",
+          "default": "./test-results",
+          "description": "Path for test result outputs"
+        },
+        "includeCoverage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include coverage reports in output"
+        },
+        "includePerformance": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include performance metrics in output"
+        },
+        "includeSecurity": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include security test results in output"
+        }
+      }
+    },
+    "parallelization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable parallel test execution"
+        },
+        "maxWorkers": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 4,
+          "description": "Maximum number of parallel test workers"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 300000,
+          "description": "Test execution timeout in milliseconds"
+        }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable test retry on failure"
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 2,
+          "description": "Maximum number of retry attempts"
+        },
+        "retryDelay": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1000,
+          "description": "Delay between retries in milliseconds"
+        },
+        "retryableTests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of test patterns that should be retried"
+        }
+      }
+    }
+  }
+} 

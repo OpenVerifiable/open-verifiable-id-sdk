@@ -1,0 +1,6 @@
+# This directory is for colocated storage tests
+# Examples:
+# - client.test.ts
+# - memory.test.ts
+# - secure-storage.test.ts
+# - adapters/ (if adapters exist) 

@@ -1,0 +1,55 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Test output
+test-results/
+*.test-results.txt
+*.test-output.txt
+unit-test-output.txt
+user-agent-test-output.txt
+parent-agent-test-results.txt
+package-agent-test-results.txt
+service-agent-test-results.txt
+revocation-test-output.txt
+storage-test-output.txt
+test-output.txt
+type-check-output.txt
+
+# Environment files
+.env
+*.env
+sample.env
+test-config.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# Misc
+*.tgz
+*.swp
+*.swo
+
+# Ignore generated types
+**/types-reference.ts
+
+# Ignore debug files
+debug-*.ts
+
+# Ignore shell scripts
+*.sh 

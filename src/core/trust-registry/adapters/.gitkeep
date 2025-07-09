@@ -1,0 +1,5 @@
+# This directory is for platform-specific trust registry adapters
+# Examples:
+# - adapter-w3c-trust-registry.ts
+# - adapter-dif-trust-registry.ts
+# - adapter-custom-provider.ts 

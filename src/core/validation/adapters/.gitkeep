@@ -1,0 +1,5 @@
+# This directory is for platform-specific validation adapters
+# Examples:
+# - adapter-w3c-vc-2.0.ts
+# - adapter-w3c-vc-1.1.ts
+# - adapter-custom-schema.ts 

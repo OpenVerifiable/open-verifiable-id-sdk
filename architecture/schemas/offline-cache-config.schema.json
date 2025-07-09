@@ -1,0 +1,201 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/offline-cache-config.schema.json",
+  "title": "Offline Cache Configuration",
+  "description": "Configuration for offline credential caching and synchronization per ADR-0005",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enabled"],
+  "properties": {
+    "enabled": { 
+      "type": "boolean",
+      "description": "Whether offline caching is enabled"
+    },
+    "maxCacheSize": { 
+      "type": "integer", 
+      "minimum": 1,
+      "default": 1000,
+      "description": "Maximum number of credentials to cache locally"
+    },
+    "maxStorageSize": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 100000000,
+      "description": "Maximum cache storage size in bytes (100MB default)"
+    },
+    "syncInterval": { 
+      "type": "integer", 
+      "minimum": 0,
+      "default": 300000,
+      "description": "Sync interval in milliseconds (5 minutes default, 0 for manual only)"
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to encrypt cached data"
+        },
+        "algorithm": { 
+          "type": "string",
+          "enum": ["AES-256-GCM", "ChaCha20-Poly1305"],
+          "default": "AES-256-GCM",
+          "description": "Encryption algorithm for cached data"
+        },
+        "keyDerivation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": ["PBKDF2", "Argon2"],
+              "default": "PBKDF2",
+              "description": "Key derivation algorithm"
+            },
+            "iterations": {
+              "type": "integer",
+              "minimum": 1000,
+              "default": 100000,
+              "description": "Number of iterations for key derivation"
+            }
+          }
+        }
+      }
+    },
+    "syncEndpoints": {
+      "type": "array",
+      "description": "List of sync endpoints for credential synchronization",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url"],
+        "properties": {
+          "url": { 
+            "type": "string", 
+            "format": "uri",
+            "description": "Sync endpoint URL"
+          },
+          "priority": { 
+            "type": "integer", 
+            "minimum": 1,
+            "default": 1,
+            "description": "Priority for this endpoint (lower = higher priority)"
+          },
+          "authentication": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["none", "basic", "bearer", "api-key"],
+                "default": "none"
+              },
+              "credentials": {
+                "type": "object",
+                "description": "Authentication credentials"
+              }
+            }
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this endpoint is enabled"
+          }
+        }
+      }
+    },
+    "conflictResolution": {
+      "type": "string",
+      "enum": ["last-write-wins", "manual", "timestamp-based", "version-based"],
+      "default": "timestamp-based",
+      "description": "Strategy for resolving sync conflicts"
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxAge": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 2592000000,
+          "description": "Maximum age of cached credentials in milliseconds (30 days default)"
+        },
+        "cleanupInterval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 86400000,
+          "description": "Cache cleanup interval in milliseconds (24 hours default)"
+        },
+        "keepExpired": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to keep expired credentials in cache"
+        }
+      }
+    },
+    "compression": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to compress cached data"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": ["gzip", "brotli", "lz4"],
+          "default": "gzip",
+          "description": "Compression algorithm"
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1024,
+          "description": "Minimum size in bytes to trigger compression"
+        }
+      }
+    },
+    "monitoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable cache monitoring and metrics"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["hit-rate", "miss-rate", "storage-usage", "sync-status", "error-rate"]
+          },
+          "default": ["hit-rate", "storage-usage", "sync-status"]
+        },
+        "alertThresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "storageUsage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.9,
+              "description": "Alert when storage usage exceeds this threshold"
+            },
+            "errorRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.1,
+              "description": "Alert when error rate exceeds this threshold"
+            }
+          }
+        }
+      }
+    }
+  }
+} 

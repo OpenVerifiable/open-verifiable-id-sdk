@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/secure-storage-access-log.schema.json",
+  "title": "Secure Storage Access Log",
+  "description": "Audit trail entries returned by SecureStorageImpl.getAccessLog().",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "timestamp",
+      "operation",
+      "keyOrCredentialId",
+      "user",
+      "method",
+      "success"
+    ],
+    "properties": {
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO-8601 encoded UTC timestamp (e.g., 2025-07-06T12:34:56.000Z)"
+      },
+      "operation": {
+        "type": "string",
+        "enum": [
+          "store",
+          "retrieve",
+          "delete",
+          "export",
+          "import",
+          "rotate"
+        ]
+      },
+      "keyOrCredentialId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "user": {
+        "type": "string",
+        "minLength": 1,
+        "description": "User identifier or alias performing the operation."
+      },
+      "method": {
+        "type": "string",
+        "enum": [
+          "password",
+          "biometric",
+          "hardware",
+          "mfa"
+        ]
+      },
+      "success": {
+        "type": "boolean"
+      },
+      "details": {
+        "type": "string",
+        "description": "Optional free-text details of the operation."
+      }
+    }
+  }
+} 

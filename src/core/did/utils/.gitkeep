@@ -1,0 +1,6 @@
+# This directory contains DID utility functions
+# Examples:
+# - did-resolver.ts
+# - did-validator.ts
+# - key-generator.ts
+# - proof-creator.ts 

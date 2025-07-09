@@ -1,0 +1,305 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/cross-platform-compatibility.schema.json",
+  "title": "Cross-Platform Compatibility Configuration",
+  "description": "Configuration for cross-platform compatibility and feature detection per ADR-0013",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["targetPlatforms"],
+  "properties": {
+    "targetPlatforms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["node", "browser", "react-native", "electron", "worker"]
+      },
+      "description": "Target platforms for SDK compatibility"
+    },
+    "featureDetection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cryptoAPI": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Detect available cryptographic APIs"
+        },
+        "storageAPI": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Detect available storage APIs"
+        },
+        "networkAPI": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Detect available network APIs"
+        },
+        "secureContext": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Detect secure context availability"
+        },
+        "biometricSupport": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Detect biometric authentication support"
+        },
+        "hardwareAcceleration": {
+          "type": "boolean",
+          "default": false,
+          "description": "Detect hardware acceleration support"
+        },
+        "webAssembly": {
+          "type": "boolean",
+          "default": false,
+          "description": "Detect WebAssembly support"
+        }
+      }
+    },
+    "polyfills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "crypto": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Enable cryptographic polyfills"
+        },
+        "storage": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Enable storage polyfills"
+        },
+        "network": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Enable network polyfills"
+        },
+        "fetch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable fetch polyfill"
+        },
+        "promises": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Promise polyfill"
+        }
+      }
+    },
+    "fallbacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cryptoImplementation": {
+          "type": "string",
+          "enum": ["native", "polyfill", "external"],
+          "default": "native",
+          "description": "Preferred cryptographic implementation"
+        },
+        "storageImplementation": {
+          "type": "string",
+          "enum": ["localStorage", "indexedDB", "fileSystem", "external"],
+          "default": "localStorage",
+          "description": "Preferred storage implementation"
+        },
+        "networkImplementation": {
+          "type": "string",
+          "enum": ["fetch", "xhr", "node-fetch", "external"],
+          "default": "fetch",
+          "description": "Preferred network implementation"
+        }
+      }
+    },
+    "platformSpecific": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "crypto": {
+              "type": "string",
+              "enum": ["node:crypto", "crypto-browserify", "external"],
+              "default": "node:crypto",
+              "description": "Node.js crypto implementation"
+            },
+            "storage": {
+              "type": "string",
+              "enum": ["fs", "sqlite", "external"],
+              "default": "fs",
+              "description": "Node.js storage implementation"
+            },
+            "network": {
+              "type": "string",
+              "enum": ["http", "https", "fetch", "external"],
+              "default": "https",
+              "description": "Node.js network implementation"
+            }
+          }
+        },
+        "browser": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "crypto": {
+              "type": "string",
+              "enum": ["WebCrypto", "crypto-js", "external"],
+              "default": "WebCrypto",
+              "description": "Browser crypto implementation"
+            },
+            "storage": {
+              "type": "string",
+              "enum": ["localStorage", "indexedDB", "sessionStorage", "external"],
+              "default": "localStorage",
+              "description": "Browser storage implementation"
+            },
+            "network": {
+              "type": "string",
+              "enum": ["fetch", "xhr", "external"],
+              "default": "fetch",
+              "description": "Browser network implementation"
+            }
+          }
+        },
+        "react-native": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "crypto": {
+              "type": "string",
+              "enum": ["react-native-crypto", "expo-crypto", "external"],
+              "default": "react-native-crypto",
+              "description": "React Native crypto implementation"
+            },
+            "storage": {
+              "type": "string",
+              "enum": ["AsyncStorage", "SQLite", "external"],
+              "default": "AsyncStorage",
+              "description": "React Native storage implementation"
+            },
+            "network": {
+              "type": "string",
+              "enum": ["fetch", "XMLHttpRequest", "external"],
+              "default": "fetch",
+              "description": "React Native network implementation"
+            }
+          }
+        },
+        "electron": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "crypto": {
+              "type": "string",
+              "enum": ["node:crypto", "WebCrypto", "external"],
+              "default": "node:crypto",
+              "description": "Electron crypto implementation"
+            },
+            "storage": {
+              "type": "string",
+              "enum": ["fs", "localStorage", "external"],
+              "default": "fs",
+              "description": "Electron storage implementation"
+            },
+            "network": {
+              "type": "string",
+              "enum": ["https", "fetch", "external"],
+              "default": "https",
+              "description": "Electron network implementation"
+            }
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minNodeVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "default": "16.0.0",
+          "description": "Minimum Node.js version"
+        },
+        "minBrowserVersion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "chrome": { "type": "string" },
+            "firefox": { "type": "string" },
+            "safari": { "type": "string" },
+            "edge": { "type": "string" }
+          },
+          "description": "Minimum browser versions"
+        },
+        "minReactNativeVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "default": "0.60.0",
+          "description": "Minimum React Native version"
+        },
+        "minElectronVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "default": "20.0.0",
+          "description": "Minimum Electron version"
+        }
+      }
+    },
+    "testing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "crossPlatformTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run tests across all target platforms"
+        },
+        "featureDetectionTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Test feature detection accuracy"
+        },
+        "polyfillTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Test polyfill functionality"
+        },
+        "fallbackTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Test fallback mechanisms"
+        }
+      }
+    },
+    "optimization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "treeShaking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable tree shaking for unused code"
+        },
+        "codeSplitting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable code splitting by platform"
+        },
+        "minification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable code minification"
+        },
+        "sourceMaps": {
+          "type": "boolean",
+          "default": false,
+          "description": "Generate source maps for debugging"
+        }
+      }
+    }
+  }
+} 

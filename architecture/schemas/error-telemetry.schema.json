@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/error-telemetry.schema.json",
+  "title": "SDK Error Telemetry Event",
+  "description": "Privacy-preserving error event sent when telemetry is enabled (opt-in). Contains no PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "errorCode",
+    "category",
+    "severity",
+    "operationType",
+    "sdkVersion",
+    "platform",
+    "timestamp"
+  ],
+  "properties": {
+    "errorCode": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": [
+        "network",
+        "cryptography",
+        "validation",
+        "storage",
+        "external_service"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warning", "error", "critical"]
+    },
+    "operationType": { "type": "string" },
+    "sdkVersion": { "type": "string" },
+    "platform": {
+      "type": "string",
+      "enum": ["node", "browser", "react-native", "electron", "worker"]
+    },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+} 

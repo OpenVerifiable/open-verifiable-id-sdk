@@ -1,0 +1,429 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/llm-integration.schema.json",
+  "title": "LLM Development Integration Configuration",
+  "description": "Configuration for LLM development integration and AI-assisted features per ADR-0011",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether LLM integration is enabled"
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Provider name identifier"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["openai", "anthropic", "google", "azure", "aws", "local", "custom"],
+            "description": "LLM provider type"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this provider is enabled"
+          },
+          "config": {
+            "type": "object",
+            "description": "Provider-specific configuration"
+          }
+        }
+      },
+      "description": "Configured LLM providers"
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codeGeneration": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model for code generation tasks"
+        },
+        "codeReview": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model for code review tasks"
+        },
+        "documentation": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model for documentation generation"
+        },
+        "testing": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model for test generation"
+        },
+        "debugging": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model for debugging assistance"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codeGeneration": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable AI-assisted code generation"
+            },
+            "contextWindow": {
+              "type": "integer",
+              "minimum": 1000,
+              "default": 8000,
+              "description": "Context window size for code generation"
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.1,
+              "description": "Creativity level for code generation"
+            },
+            "maxTokens": {
+              "type": "integer",
+              "minimum": 100,
+              "default": 2000,
+              "description": "Maximum tokens for generated code"
+            }
+          }
+        },
+        "codeReview": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable AI-assisted code review"
+            },
+            "reviewAspects": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["security", "performance", "readability", "best-practices", "accessibility", "testing"]
+              },
+              "default": ["security", "best-practices"],
+              "description": "Aspects to review in code"
+            },
+            "severityLevels": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["error", "warning", "info", "suggestion"]
+              },
+              "default": ["error", "warning"],
+              "description": "Severity levels to include in reviews"
+            }
+          }
+        },
+        "documentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable AI-assisted documentation generation"
+            },
+            "formats": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["markdown", "jsdoc", "tsdoc", "asciidoc", "html"]
+              },
+              "default": ["markdown", "jsdoc"],
+              "description": "Documentation formats to generate"
+            },
+            "includeExamples": {
+              "type": "boolean",
+              "default": true,
+              "description": "Include code examples in documentation"
+            },
+            "includeDiagrams": {
+              "type": "boolean",
+              "default": false,
+              "description": "Include diagrams in documentation"
+            }
+          }
+        },
+        "testing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable AI-assisted test generation"
+            },
+            "testTypes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["unit", "integration", "e2e", "performance", "security"]
+              },
+              "default": ["unit", "integration"],
+              "description": "Types of tests to generate"
+            },
+            "frameworks": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["jest", "mocha", "vitest", "cypress", "playwright"]
+              },
+              "default": ["jest"],
+              "description": "Testing frameworks to use"
+            },
+            "coverageTarget": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 80,
+              "description": "Target test coverage percentage"
+            }
+          }
+        },
+        "debugging": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable AI-assisted debugging"
+            },
+            "errorAnalysis": {
+              "type": "boolean",
+              "default": true,
+              "description": "Analyze error messages and stack traces"
+            },
+            "suggestions": {
+              "type": "boolean",
+              "default": true,
+              "description": "Provide debugging suggestions"
+            },
+            "fixProposals": {
+              "type": "boolean",
+              "default": false,
+              "description": "Propose fixes for identified issues"
+            }
+          }
+        }
+      }
+    },
+    "prompts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "systemPrompt": {
+          "type": "string",
+          "description": "System prompt for LLM interactions"
+        },
+        "codeGenerationPrompt": {
+          "type": "string",
+          "description": "Prompt template for code generation"
+        },
+        "codeReviewPrompt": {
+          "type": "string",
+          "description": "Prompt template for code review"
+        },
+        "documentationPrompt": {
+          "type": "string",
+          "description": "Prompt template for documentation generation"
+        },
+        "testingPrompt": {
+          "type": "string",
+          "description": "Prompt template for test generation"
+        },
+        "debuggingPrompt": {
+          "type": "string",
+          "description": "Prompt template for debugging assistance"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "includeCodebase": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include relevant codebase context"
+        },
+        "includeDependencies": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include dependency information"
+        },
+        "includeTests": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include existing test files"
+        },
+        "includeDocumentation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include existing documentation"
+        },
+        "maxContextSize": {
+          "type": "integer",
+          "minimum": 1000,
+          "default": 16000,
+          "description": "Maximum context size in tokens"
+        },
+        "contextStrategy": {
+          "type": "string",
+          "enum": ["recent", "relevant", "full"],
+          "default": "relevant",
+          "description": "Strategy for selecting context"
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codeScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan generated code for security issues"
+        },
+        "sensitiveDataFiltering": {
+          "type": "boolean",
+          "default": true,
+          "description": "Filter sensitive data from prompts"
+        },
+        "outputValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Validate LLM outputs before use"
+        },
+        "rateLimiting": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable rate limiting"
+            },
+            "requestsPerMinute": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 60,
+              "description": "Maximum requests per minute"
+            },
+            "burstLimit": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10,
+              "description": "Burst limit for requests"
+            }
+          }
+        }
+      }
+    },
+    "monitoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable LLM usage monitoring"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["usage", "performance", "quality", "cost", "errors"]
+          },
+          "default": ["usage", "performance", "cost"],
+          "description": "Metrics to collect"
+        },
+        "logging": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable LLM interaction logging"
+            },
+            "level": {
+              "type": "string",
+              "enum": ["debug", "info", "warn", "error"],
+              "default": "info",
+              "description": "Logging level"
+            },
+            "includePrompts": {
+              "type": "boolean",
+              "default": false,
+              "description": "Include prompts in logs"
+            },
+            "includeResponses": {
+              "type": "boolean",
+              "default": false,
+              "description": "Include responses in logs"
+            }
+          }
+        }
+      }
+    },
+    "costManagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "budgetLimit": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Monthly budget limit in USD"
+        },
+        "costTracking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track LLM usage costs"
+        },
+        "optimization": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable cost optimization"
+            },
+            "modelSelection": {
+              "type": "boolean",
+              "default": true,
+              "description": "Automatically select cost-effective models"
+            },
+            "promptOptimization": {
+              "type": "boolean",
+              "default": true,
+              "description": "Optimize prompts to reduce token usage"
+            }
+          }
+        }
+      }
+    }
+  }
+} 

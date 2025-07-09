@@ -1,0 +1,7 @@
+# This directory is for colocated validation tests
+# Examples:
+# - client.test.ts
+# - schema-validator.test.ts
+# - proof-validator.test.ts
+# - trust-validator.test.ts
+# - revocation-validator.test.ts 

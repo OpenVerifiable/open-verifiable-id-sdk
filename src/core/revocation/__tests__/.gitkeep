@@ -1,0 +1,5 @@
+# This directory is for colocated revocation tests
+# Examples:
+# - client.test.ts
+# - types.test.ts
+# - adapters/ (if adapters exist) 

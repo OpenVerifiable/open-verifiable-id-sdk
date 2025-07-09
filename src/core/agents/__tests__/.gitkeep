@@ -1,0 +1,6 @@
+# This directory is for colocated agent tests
+# Examples:
+# - client.test.ts
+# - factory.test.ts
+# - user-agent.test.ts
+# - adapters/ (if adapters exist) 

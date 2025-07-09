@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/agent-configuration.schema.json",
+  "title": "Agent Configuration",
+  "description": "Configuration object for agent initialization and plugin management per ADR-0007",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agentId", "agentType"],
+  "properties": {
+    "agentId": { 
+      "type": "string", 
+      "minLength": 1,
+      "description": "Unique identifier for the agent instance"
+    },
+    "agentType": { 
+      "type": "string", 
+      "enum": ["user", "package", "parent", "service"],
+      "description": "Type of agent as defined in ADR-0007"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "List of plugins to register with the agent",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version", "type"],
+        "properties": {
+          "name": { 
+            "type": "string",
+            "minLength": 1,
+            "description": "Plugin name identifier"
+          },
+          "version": { 
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+",
+            "description": "Plugin version in semver format"
+          },
+          "type": { 
+            "type": "string", 
+            "enum": ["did-method", "credential-type", "crypto-suite", "utility"],
+            "description": "Plugin type category"
+          },
+          "config": { 
+            "type": "object",
+            "description": "Plugin-specific configuration object"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the plugin is enabled"
+          }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "encryptionLevel": { 
+          "type": "string", 
+          "enum": ["standard", "high"],
+          "default": "standard",
+          "description": "Encryption level for agent data"
+        },
+        "requireBiometric": { 
+          "type": "boolean",
+          "default": false,
+          "description": "Whether biometric authentication is required"
+        },
+        "keyStorageType": { 
+          "type": "string", 
+          "enum": ["file", "keychain", "hardware"],
+          "default": "file",
+          "description": "Type of key storage to use"
+        },
+        "sandboxMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether plugins run in sandboxed mode"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trustRegistry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable trust registry functionality"
+        },
+        "schemaRegistry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schema registry integration"
+        },
+        "carbonAwareness": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable carbon impact tracking"
+        },
+        "biometricAuth": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable biometric authentication"
+        },
+        "offlineCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable offline credential caching"
+        }
+      }
+    },
+    "endpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaRegistry": { 
+          "type": "string", 
+          "format": "uri",
+          "description": "Schema registry endpoint URL"
+        },
+        "trustRegistry": { 
+          "type": "string", 
+          "format": "uri",
+          "description": "Trust registry endpoint URL"
+        },
+        "carbonService": { 
+          "type": "string", 
+          "format": "uri",
+          "description": "Carbon impact service endpoint"
+        }
+      }
+    }
+  }
+} 

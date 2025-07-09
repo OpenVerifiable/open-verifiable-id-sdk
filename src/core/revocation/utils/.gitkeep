@@ -1,0 +1,5 @@
+# This directory contains revocation utility functions
+# Examples:
+# - revocation-validator.ts
+# - list-importer.ts
+# - list-exporter.ts 

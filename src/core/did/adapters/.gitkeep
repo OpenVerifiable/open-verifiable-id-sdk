@@ -1,0 +1,6 @@
+# This directory is for platform-specific DID method adapters
+# Examples:
+# - adapter-did-key.ts
+# - adapter-did-web.ts
+# - adapter-did-cheqd.ts
+# - adapter-did-ethr.ts 

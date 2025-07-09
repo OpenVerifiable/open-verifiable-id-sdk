@@ -1,0 +1,467 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/key-management.schema.json",
+  "title": "Key Management Configuration",
+  "description": "Configuration for cryptographic key management and recovery per ADR-0019",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["keyTypes"],
+  "properties": {
+    "keyTypes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["Ed25519", "secp256k1", "RSA", "X25519", "P-256", "P-384"]
+      },
+      "default": ["Ed25519"],
+      "description": "Supported key types for DID operations"
+    },
+    "keyGeneration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaultType": {
+          "type": "string",
+          "enum": ["Ed25519", "secp256k1", "RSA", "X25519", "P-256", "P-384"],
+          "default": "Ed25519",
+          "description": "Default key type for new DIDs"
+        },
+        "keySize": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "RSA": {
+              "type": "integer",
+              "enum": [2048, 3072, 4096],
+              "default": 2048,
+              "description": "RSA key size in bits"
+            },
+            "P-256": {
+              "type": "integer",
+              "const": 256,
+              "description": "P-256 key size (fixed)"
+            },
+            "P-384": {
+              "type": "integer",
+              "const": 384,
+              "description": "P-384 key size (fixed)"
+            }
+          }
+        },
+        "useSecureRandom": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use cryptographically secure random number generation"
+        },
+        "hardwareBacked": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use hardware-backed key generation when available"
+        }
+      }
+    },
+    "keyStorage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "encryption": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": ["AES-256-GCM", "ChaCha20-Poly1305"],
+              "default": "AES-256-GCM",
+              "description": "Encryption algorithm for stored keys"
+            },
+            "keyDerivation": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "algorithm": {
+                  "type": "string",
+                  "enum": ["PBKDF2", "Argon2"],
+                  "default": "PBKDF2",
+                  "description": "Key derivation algorithm"
+                },
+                "iterations": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "default": 100000,
+                  "description": "Number of iterations for key derivation"
+                },
+                "saltLength": {
+                  "type": "integer",
+                  "minimum": 16,
+                  "default": 32,
+                  "description": "Salt length in bytes"
+                }
+              }
+            }
+          }
+        },
+        "backup": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable key backup functionality"
+            },
+            "encrypted": {
+              "type": "boolean",
+              "default": true,
+              "description": "Encrypt backup files"
+            },
+            "compressed": {
+              "type": "boolean",
+              "default": true,
+              "description": "Compress backup files"
+            },
+            "autoBackup": {
+              "type": "boolean",
+              "default": false,
+              "description": "Automatically create backups"
+            },
+            "backupInterval": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 86400000,
+              "description": "Backup interval in milliseconds (24 hours)"
+            }
+          }
+        }
+      }
+    },
+    "keyRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mnemonic": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable mnemonic phrase recovery"
+            },
+            "wordCount": {
+              "type": "integer",
+              "enum": [12, 15, 18, 21, 24],
+              "default": 24,
+              "description": "Number of words in mnemonic phrase"
+            },
+            "language": {
+              "type": "string",
+              "enum": ["english", "spanish", "french", "italian", "portuguese", "japanese", "korean", "chinese-simplified", "chinese-traditional"],
+              "default": "english",
+              "description": "Mnemonic phrase language"
+            },
+            "passphrase": {
+              "type": "boolean",
+              "default": false,
+              "description": "Require additional passphrase for recovery"
+            }
+          }
+        },
+        "shamirSecretSharing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable Shamir's Secret Sharing for key recovery"
+            },
+            "shares": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 10,
+              "default": 3,
+              "description": "Number of shares to create"
+            },
+            "threshold": {
+              "type": "integer",
+              "minimum": 2,
+              "default": 2,
+              "description": "Number of shares required for recovery"
+            }
+          }
+        },
+        "hardwareWallet": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable hardware wallet integration"
+            },
+            "supportedDevices": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["ledger", "trezor", "yubikey", "tpm"]
+              },
+              "description": "Supported hardware wallet devices"
+            }
+          }
+        }
+      }
+    },
+    "keyRotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic key rotation"
+        },
+        "rotationInterval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 31536000000,
+          "description": "Key rotation interval in milliseconds (1 year)"
+        },
+        "gracePeriod": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 2592000000,
+          "description": "Grace period for key rotation in milliseconds (30 days)"
+        },
+        "autoRotation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically rotate keys without user intervention"
+        },
+        "rotationStrategy": {
+          "type": "string",
+          "enum": ["time-based", "usage-based", "security-event"],
+          "default": "time-based",
+          "description": "Strategy for determining when to rotate keys"
+        }
+      }
+    },
+    "keyUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "signing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowedAlgorithms": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["EdDSA", "ES256", "ES384", "ES512", "RS256", "RS384", "RS512"]
+              },
+              "default": ["EdDSA", "ES256"],
+              "description": "Allowed signing algorithms"
+            },
+            "requireUserConfirmation": {
+              "type": "boolean",
+              "default": true,
+              "description": "Require user confirmation for signing operations"
+            }
+          }
+        },
+        "encryption": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowedAlgorithms": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["AES-256-GCM", "ChaCha20-Poly1305", "RSA-OAEP"]
+              },
+              "default": ["AES-256-GCM"],
+              "description": "Allowed encryption algorithms"
+            }
+          }
+        },
+        "keyAgreement": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowedAlgorithms": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["ECDH", "X25519", "X448"]
+              },
+              "default": ["X25519"],
+              "description": "Allowed key agreement algorithms"
+            }
+          }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keyIsolation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Isolate keys in separate memory spaces"
+        },
+        "keyPinning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pin keys to prevent tampering"
+        },
+        "keyWrapping": {
+          "type": "boolean",
+          "default": true,
+          "description": "Wrap keys with additional encryption layer"
+        },
+        "accessControl": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requireAuthentication": {
+              "type": "boolean",
+              "default": true,
+              "description": "Require authentication for key access"
+            },
+            "sessionTimeout": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1800000,
+              "description": "Session timeout in milliseconds (30 minutes)"
+            },
+            "maxFailedAttempts": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 3,
+              "description": "Maximum failed authentication attempts"
+            }
+          }
+        }
+      }
+    },
+    "deviceDerivedKeyGeneration": {
+      "type": "object",
+      "description": "Configuration for deterministic key generation from device identifiers",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable device-derived key generation"
+        },
+        "identifiers": {
+          "type": "array",
+          "description": "Device identifiers to use for key generation",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["bluetooth", "hardware", "os", "custom"],
+                "description": "Type of device identifier"
+              },
+              "value": {
+                "type": "string",
+                "description": "The device identifier value"
+              },
+              "salt": {
+                "type": "string",
+                "description": "Optional salt for enhanced entropy"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "description": "Human-readable description of the identifier"
+                  },
+                  "stability": {
+                    "type": "string",
+                    "enum": ["high", "medium", "low"],
+                    "description": "Stability of the identifier"
+                  },
+                  "privacy": {
+                    "type": "string",
+                    "enum": ["high", "medium", "low"],
+                    "description": "Privacy level of the identifier"
+                  }
+                }
+              }
+            },
+            "required": ["type", "value"]
+          }
+        },
+        "hashAlgorithm": {
+          "type": "string",
+          "enum": ["SHA-256", "SHA-512"],
+          "default": "SHA-256",
+          "description": "Hash algorithm for key derivation"
+        },
+        "keyType": {
+          "type": "string",
+          "enum": ["Ed25519", "X25519"],
+          "default": "Ed25519",
+          "description": "Key type for did:key generation"
+        },
+        "didMethod": {
+          "type": "string",
+          "enum": ["did:key", "did:device"],
+          "default": "did:key",
+          "description": "DID method to use for generated keys"
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "encryptPrivateKeys": {
+              "type": "boolean",
+              "default": true,
+              "description": "Encrypt private keys at rest"
+            },
+            "backupEnabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable backup of device DID mappings"
+            },
+            "auditLogging": {
+              "type": "boolean",
+              "default": true,
+              "description": "Log device DID operations"
+            }
+          }
+        },
+        "rotation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable device DID rotation"
+            },
+            "triggerOnIdentifierChange": {
+              "type": "boolean",
+              "default": true,
+              "description": "Rotate DID when identifier changes"
+            },
+            "preserveHistory": {
+              "type": "boolean",
+              "default": true,
+              "description": "Preserve old DIDs for verification"
+            }
+          }
+        }
+      },
+      "required": ["identifiers"]
+    }
+  }
+} 

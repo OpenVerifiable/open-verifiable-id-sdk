@@ -1,0 +1,5 @@
+# This directory is for platform-specific carbon awareness adapters
+# Examples:
+# - adapter-aws-carbon.ts
+# - adapter-google-carbon.ts
+# - adapter-azure-carbon.ts 

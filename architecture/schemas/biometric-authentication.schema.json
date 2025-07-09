@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/biometric-authentication.schema.json",
+  "title": "Biometric Authentication Configuration",
+  "description": "Configuration for biometric authentication features per ADR-0008",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enabled"],
+  "properties": {
+    "enabled": { 
+      "type": "boolean",
+      "description": "Whether biometric authentication is enabled"
+    },
+    "modalities": {
+      "type": "array",
+      "description": "Supported biometric modalities",
+      "items": {
+        "type": "string",
+        "enum": ["fingerprint", "face", "voice", "iris"]
+      },
+      "minItems": 1
+    },
+    "fallbackMethods": {
+      "type": "array",
+      "description": "Fallback authentication methods when biometric fails",
+      "items": {
+        "type": "string",
+        "enum": ["password", "pin", "recovery-questions", "hardware-key"]
+      },
+      "minItems": 1
+    },
+    "securityLevel": {
+      "type": "string",
+      "enum": ["standard", "high", "maximum"],
+      "default": "standard",
+      "description": "Security level for biometric operations"
+    },
+    "hardwareBacked": { 
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to require hardware-backed biometric storage"
+    },
+    "maxAttempts": { 
+      "type": "integer", 
+      "minimum": 1, 
+      "maximum": 10,
+      "default": 3,
+      "description": "Maximum biometric authentication attempts"
+    },
+    "timeout": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 30000,
+      "description": "Biometric authentication timeout in milliseconds"
+    },
+    "livenessDetection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable liveness detection to prevent spoofing"
+        },
+        "confidenceThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Minimum confidence threshold for liveness detection"
+        }
+      }
+    },
+    "enrollment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requireMultipleSamples": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require multiple biometric samples during enrollment"
+        },
+        "sampleCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 3,
+          "description": "Number of biometric samples required for enrollment"
+        },
+        "qualityThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.7,
+          "description": "Minimum quality threshold for biometric samples"
+        }
+      }
+    },
+    "platformSpecific": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ios": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "useSecureEnclave": {
+              "type": "boolean",
+              "default": true,
+              "description": "Use iOS Secure Enclave for biometric storage"
+            },
+            "allowFaceID": {
+              "type": "boolean",
+              "default": true,
+              "description": "Allow Face ID authentication"
+            },
+            "allowTouchID": {
+              "type": "boolean",
+              "default": true,
+              "description": "Allow Touch ID authentication"
+            }
+          }
+        },
+        "android": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "useStrongBox": {
+              "type": "boolean",
+              "default": true,
+              "description": "Use Android StrongBox for biometric storage"
+            },
+            "biometricStrength": {
+              "type": "string",
+              "enum": ["weak", "strong"],
+              "default": "strong",
+              "description": "Required biometric strength level"
+            }
+          }
+        },
+        "web": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "useWebAuthn": {
+              "type": "boolean",
+              "default": true,
+              "description": "Use WebAuthn for biometric authentication"
+            },
+            "requireUserVerification": {
+              "type": "boolean",
+              "default": true,
+              "description": "Require user verification in WebAuthn"
+            }
+          }
+        }
+      }
+    }
+  }
+} 

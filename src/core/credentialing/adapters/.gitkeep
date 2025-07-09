@@ -1,0 +1,5 @@
+# This directory is for platform-specific credentialing adapters
+# Examples:
+# - adapter-cheqd.ts
+# - adapter-ethereum.ts
+# - adapter-polygon.ts 

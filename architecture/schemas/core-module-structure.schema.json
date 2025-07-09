@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/core-module-structure.schema.json",
+  "title": "Open Verifiable ID SDK – Core Module Structure",
+  "description": "Validates that every first-level directory inside open-verifiable-id-sdk/src/core conforms to the standard layout defined in ADR-0022.",
+  "type": "object",
+  "properties": {
+    "index.ts": { "type": "string" },
+    "types.ts": {
+      "type": "string",
+      "description": "Optional – present when the module exposes public interfaces"
+    },
+    "client.ts": {
+      "type": "string",
+      "description": "At least one of client.ts or manager.ts must exist"
+    },
+    "manager.ts": { "type": "string" },
+    "adapters": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional sub-directory for platform adapters"
+    },
+    "utils": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional sub-directory for internal helpers"
+    },
+    "__tests__": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Colocated unit & integration tests"
+    }
+  },
+  "required": ["index.ts"],
+  "oneOf": [
+    { "required": ["client.ts"] },
+    { "required": ["manager.ts"] }
+  ],
+  "additionalProperties": true
+} 

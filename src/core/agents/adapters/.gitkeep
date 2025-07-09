@@ -1,0 +1,5 @@
+# This directory is for platform-specific agent adapters
+# Examples:
+# - adapter-veramo.ts
+# - adapter-aries.ts
+# - adapter-custom-framework.ts 

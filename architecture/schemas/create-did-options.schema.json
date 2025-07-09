@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/create-did-options.schema.json",
+  "title": "Create DID Options",
+  "description": "Valid options object accepted by DID creation helpers (supports both legacy and new ADR formats).",
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "Legacy Format (v1)",
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method": { "type": "string" },
+        "alias": { "type": "string" },
+        "provider": { "type": "string" },
+        "options": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "ADR-0007 Format (v2)",
+      "type": "object",
+      "properties": {
+        "method": { "type": "string" },
+        "keyType": { "type": "string" },
+        "alias": { "type": "string" },
+        "network": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    }
+  ]
+} 

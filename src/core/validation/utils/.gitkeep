@@ -1,0 +1,6 @@
+# This directory contains validation utility functions
+# Files moved here:
+# - proof-validator.ts (from proof.ts)
+# - schema-validator.ts (from schema.ts)
+# - revocation-validator.ts (from revocation.ts)
+# - trust-validator.ts (from trust.ts) 

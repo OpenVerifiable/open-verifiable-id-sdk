@@ -1,0 +1,301 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdk.openverifiable.org/schemas/performance-monitoring.schema.json",
+  "title": "Performance Monitoring Configuration",
+  "description": "Configuration for performance monitoring and optimization per ADR-0014",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enabled"],
+  "properties": {
+    "enabled": { 
+      "type": "boolean",
+      "description": "Whether performance monitoring is enabled"
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationTiming": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Track operation execution times"
+        },
+        "memoryUsage": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Track memory usage patterns"
+        },
+        "networkLatency": { 
+          "type": "boolean",
+          "default": true,
+          "description": "Track network request latencies"
+        },
+        "carbonImpact": { 
+          "type": "boolean",
+          "default": false,
+          "description": "Track carbon impact of operations"
+        },
+        "throughput": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track operations per second"
+        },
+        "errorRate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track error rates by operation type"
+        },
+        "resourceUtilization": {
+          "type": "boolean",
+          "default": false,
+          "description": "Track CPU and memory utilization"
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxOperationTime": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 5000,
+          "description": "Maximum acceptable operation time in milliseconds"
+        },
+        "maxMemoryUsage": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 100000000,
+          "description": "Maximum acceptable memory usage in bytes"
+        },
+        "maxNetworkLatency": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 10000,
+          "description": "Maximum acceptable network latency in milliseconds"
+        },
+        "minThroughput": {
+          "type": "number",
+          "minimum": 0,
+          "default": 10,
+          "description": "Minimum acceptable operations per second"
+        },
+        "maxErrorRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.05,
+          "description": "Maximum acceptable error rate (5%)"
+        }
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable performance sampling"
+        },
+        "rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.1,
+          "description": "Sampling rate (10% of operations)"
+        },
+        "adaptive": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use adaptive sampling based on load"
+        },
+        "minSampleSize": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 100,
+          "description": "Minimum sample size for statistical significance"
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval": { 
+          "type": "integer", 
+          "minimum": 0,
+          "default": 60000,
+          "description": "Reporting interval in milliseconds (1 minute)"
+        },
+        "endpoint": { 
+          "type": "string", 
+          "format": "uri",
+          "description": "Performance metrics endpoint URL"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "prometheus", "custom"],
+          "default": "json",
+          "description": "Metrics output format"
+        },
+        "batchSize": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 100,
+          "description": "Number of metrics to batch before sending"
+        },
+        "compression": {
+          "type": "boolean",
+          "default": true,
+          "description": "Compress metrics data before sending"
+        }
+      }
+    },
+    "profiling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable detailed performance profiling"
+        },
+        "cpuProfiling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable CPU profiling"
+        },
+        "memoryProfiling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable memory profiling"
+        },
+        "heapSnapshots": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable heap snapshot collection"
+        },
+        "profileInterval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 300000,
+          "description": "Profiling interval in milliseconds (5 minutes)"
+        },
+        "retention": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 86400000,
+          "description": "Profile retention time in milliseconds (24 hours)"
+        }
+      }
+    },
+    "optimization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autoOptimize": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic performance optimization"
+        },
+        "optimizationStrategies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["caching", "batching", "compression", "connection-pooling", "load-balancing"]
+          },
+          "default": ["caching", "batching"],
+          "description": "Available optimization strategies"
+        },
+        "optimizationThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Performance threshold to trigger optimization"
+        },
+        "rollbackOnFailure": {
+          "type": "boolean",
+          "default": true,
+          "description": "Rollback optimizations if they cause issues"
+        }
+      }
+    },
+    "alerts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable performance alerts"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["console", "email", "webhook", "slack", "pagerduty"]
+          },
+          "default": ["console"],
+          "description": "Alert notification channels"
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "critical": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.9,
+              "description": "Critical performance threshold"
+            },
+            "warning": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.7,
+              "description": "Warning performance threshold"
+            }
+          }
+        },
+        "cooldown": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 300000,
+          "description": "Alert cooldown period in milliseconds (5 minutes)"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["memory", "file", "database"],
+          "default": "memory",
+          "description": "Storage type for performance data"
+        },
+        "retention": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 604800000,
+          "description": "Data retention time in milliseconds (7 days)"
+        },
+        "maxSize": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100000000,
+          "description": "Maximum storage size in bytes"
+        },
+        "compression": {
+          "type": "boolean",
+          "default": true,
+          "description": "Compress stored performance data"
+        }
+      }
+    }
+  }
+} 

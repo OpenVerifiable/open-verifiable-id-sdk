@@ -1,0 +1,5 @@
+# This directory is for platform-specific revocation adapters
+# Examples:
+# - adapter-w3c-revocation-list.ts
+# - adapter-dif-revocation-registry.ts
+# - adapter-custom-provider.ts 

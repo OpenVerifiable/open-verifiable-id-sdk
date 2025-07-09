@@ -1,0 +1,5 @@
+# This directory contains trust registry utility functions
+# Examples:
+# - trust-validator.ts
+# - registry-importer.ts
+# - registry-exporter.ts 

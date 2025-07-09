@@ -1,0 +1,4 @@
+# This directory contains internal storage utilities
+# Files moved here:
+# - crypto-utils.ts (from crypto.ts)
+# - backup-utils.ts (from backup.ts) 
