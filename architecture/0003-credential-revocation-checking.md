@@ -1,6 +1,6 @@
 ---
 ADR: 0003
-Title: ov-id-sdk Credential Revocation Checking
+Title: open-verifiable-id-sdk Credential Revocation Checking
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-ov-id-sdk needs to check credential revocation status to ensure credentials are still valid. Revocation checking is critical for security and compliance, but we want to avoid external dependencies or subscriptions. The solution must provide robust revocation checking while maintaining user sovereignty and working completely offline.
+open-verifiable-id-sdk needs to check credential revocation status to ensure credentials are still valid. Revocation checking is critical for security and compliance, but we want to avoid external dependencies or subscriptions. The solution must provide robust revocation checking while maintaining user sovereignty and working completely offline.
 
 ## Requirements
 
@@ -172,7 +172,7 @@ interface RevocationProvider {
 - **Integration**: Plugin-based architecture
 - **Use Case**: Standards-compliant revocation checking
 
-### 5. Integration with ov-id-sdk
+### 5. Integration with open-verifiable-id-sdk
 
 #### Credential Validation Integration
 ```typescript

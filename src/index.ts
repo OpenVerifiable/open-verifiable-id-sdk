@@ -21,18 +21,23 @@
  */
 
 // Core exports
-export * from './core/agents';
-export * from './core/config';
-export * from './core/did';
-export * from './core/storage';
+export * from './core/agents/index.js';
+export * from './core/config.js';
+export * from './core/did/index.js';
+export * from './core/storage/index.js';
+export * from './core/resource/index.js';
+export * from './core/universal-credential/index.js';
+export * from './core/package-signer/index.js';
+// Plugin system exports (namespace to avoid top-level name collisions)
+export * as Plugins from './core/plugins/index.js';
 
 // Platform detection
-export * from './platforms';
+export * from './platforms/index.js';
 
 // Biometric authentication (explicit exports to avoid conflicts)
 export {
   BiometricAuthenticator
-} from './core/biometric/client';
+} from './core/biometric/client.js';
 export type {
   BiometricModality,
   BiometricCapabilities,
@@ -44,17 +49,17 @@ export type {
   AuthResult,
   Signature,
   FallbackMethod
-} from './core/biometric/types';
+} from './core/biometric/types.js';
 
 // Types
-export * from './types';
+export * from './types/index.js';
 
 // Convenience functions for creating agents
-import { AgentType, AgentPlugin, PluginInfo } from './types';
-import { UserAgent } from './core/agents/user-agent';
-import { PackageAgent } from './core/agents/package-agent';
-import { ParentAgent } from './core/agents/parent-agent';
-import { ServiceAgent } from './core/agents/service-agent';
+import { AgentType, AgentPlugin, PluginInfo } from './types/index.js';
+import { UserAgent } from './core/agents/user-agent.js';
+import { PackageAgent } from './core/agents/package-agent.js';
+import { ParentAgent } from './core/agents/parent-agent.js';
+import { ServiceAgent } from './core/agents/service-agent.js';
 
 /**
  * Create a user agent for individual identity management
@@ -158,7 +163,8 @@ export function createCredentialTemplate(
     issuer,
     validFrom: validFrom || new Date().toISOString(),
     validUntil,
-    '@context': context || ['https://www.w3.org/ns/credentials/v2']
+    '@context': context || ['https://www.w3.org/2018/credentials/v1'],
+    context: context || ['https://www.w3.org/2018/credentials/v1']
   };
 }
 
@@ -224,7 +230,7 @@ export function getSDKInfo() {
 
 // Re-export types for convenience
 export type { 
-  OVAgent, 
+  OpenVerifiableAgent,
   AgentType, 
   AgentPlugin, 
   PluginInfo,

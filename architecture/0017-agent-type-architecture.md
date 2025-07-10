@@ -52,7 +52,7 @@ The SDK implements a hierarchical agent architecture with a common base and spec
 
 #### Base Agent (Abstract)
 ```typescript
-export abstract class BaseAgent implements OVAgent {
+export abstract class BaseAgent implements OpenVerifiableAgent {
   public readonly agentId: string;
   public readonly agentType: AgentType;
   protected plugins: Map<string, AgentPlugin> = new Map();

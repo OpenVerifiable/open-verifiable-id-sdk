@@ -9,18 +9,26 @@ import {
   IIdentifier as VeramoIdentifier,
   IKey as VeramoKey,
   IService as VeramoService,
-  VerifiableCredential as VeramoCredential,
+  // VerifiableCredential as VeramoCredential,
   VerifiablePresentation as VeramoPresentation,
-  CredentialPayload,
-  PresentationPayload,
+  // CredentialPayload,
+  // PresentationPayload,
   IAgentContext,
-  IResolver,
-  IDIDManager,
-  IKeyManager,
-  IDataStore,
+  // IResolver,
+  // IDIDManager,
+  // IKeyManager,
+  // IDataStore,
   IPluginMethodMap,
-  IPluginMethod
+  IPluginMethod,
+  // TAgent,
+  // ICredentialIssuer,
+  // ICredentialVerifier,
+  // ICredentialPlugin,
+  // IDataStore,
+  // IResolver
 } from '@veramo/core-types';
+// import { ICheqd } from '@cheqd/did-provider-cheqd';
+import { CreateResourceParams, ResourceMetadata, UpdateResourceParams, ResourceListResult } from '../core/resource/types';
 
 // Re-export Veramo types as our base types
 export type IIdentifier = VeramoIdentifier;
@@ -39,6 +47,13 @@ export interface DataIntegrityProof {
   verificationMethod: string;
   proofPurpose: 'assertionMethod' | 'authentication' | 'capabilityInvocation' | 'capabilityDelegation';
   proofValue: string;
+}
+
+export enum ProofPurpose {
+  ASSERTION = 'assertionMethod',
+  AUTHENTICATION = 'authentication',
+  CAPABILITY_INVOCATION = 'capabilityInvocation',
+  CAPABILITY_DELEGATION = 'capabilityDelegation'
 }
 
 export interface JwtProof {
@@ -144,8 +159,8 @@ export interface AgentPlugin {
   version: string;
   type: 'did-method' | 'credential-type' | 'crypto-suite' | 'utility';
   methods: IPluginMethodMap;
-  register(agent: OvIdAgent): void;
-  unregister?(agent: OvIdAgent): void;
+  register(agent: OpenVerifiableAgent): void;
+  unregister?(agent: OpenVerifiableAgent): void;
   getInfo(): PluginInfo;
 }
 
@@ -158,25 +173,8 @@ export interface PluginInfo {
   capabilities: string[];
 }
 
-// Base agent interface that matches our implementation
-export interface OvIdAgent {
-  readonly id: string;
-  readonly agentId: string;
-  readonly agentType: AgentType;
-  getType(): string;
-  issueCredential(template: CredentialTemplate): Promise<VerifiableCredential>;
-  verifyCredential(credential: VerifiableCredential): Promise<ValidationResult>;
-  getCredential(id: string): Promise<VerifiableCredential | null>;
-  storeCredential(credential: VerifiableCredential): Promise<void>;
-  deleteCredential(id: string): Promise<void>;
-  listCredentials(): Promise<VerifiableCredential[]>;
-  initialize(): Promise<void>;
-  cleanup(): Promise<void>;
-  destroy(): Promise<void>;
-  registerPlugin(plugin: AgentPlugin): void;
-  getPlugin(name: string): AgentPlugin | undefined;
-  listPlugins(): AgentPlugin[];
-}
+// OpenVerifiableAgent interface has been consolidated into OpenVerifiableAgent
+// Use OpenVerifiableAgent 
 
 // Define our agent context with proper plugin method types
 export interface AgentPluginMethods extends IPluginMethodMap {
@@ -257,12 +255,6 @@ export interface DIDService {
   id: string;
   type: string;
   serviceEndpoint: string | object;
-}
-
-export interface DIDManager extends IDIDManager {
-  // Additional methods specific to our SDK
-  didManagerSignWithDID(args: any, context: IAgentContext<IKeyManager>): Promise<any>;
-  didManagerVerifyWithDID(args: any, context: IAgentContext<IKeyManager>): Promise<any>;
 }
 
 export interface DIDCreationOptions {
@@ -737,31 +729,62 @@ export interface LegacyAgent {
 }
 
 // ============================================================================
-// OVAgent Interface (Primary agent interface)
+// OpenVerifiableAgent Interface (Primary agent interface)
 // ============================================================================
 
-export interface OVAgent {
-  // Agent identification
-  agentId: string;
-  agentType: AgentType;
+// OpenVerifiableAgent interface that defines our custom functionality
+export interface OpenVerifiableAgent {
+  // Core agent properties
+  readonly id: string;
+  readonly agentId: string;
+  readonly agentType: AgentType;
   
-  // Core capabilities
-  createDID(method: string, options?: CreateDIDOptions): Promise<IIdentifier>;
+  // Agent type information
+  getType(): string;
+  
+  // Enhanced credential operations (extends Veramo's credential functionality)
   issueCredential(template: CredentialTemplate): Promise<VerifiableCredential>;
-  verifyCredential(credential: VerifiableCredential): Promise<VerificationResult>;
+  verifyCredentialWithValidation(credential: VerifiableCredential): Promise<ValidationResult>;
   
-  // Lifecycle management
+  // Credential storage operations (our custom storage layer)
+  getCredential(id: string): Promise<VerifiableCredential | null>;
+  storeCredential(credential: VerifiableCredential): Promise<void>;
+  deleteCredential(id: string): Promise<void>;
+  listCredentials(): Promise<VerifiableCredential[]>;
+  
+  // Agent lifecycle management
   initialize(): Promise<void>;
   cleanup(): Promise<void>;
   destroy(): Promise<void>;
   
-  // Plugin system
+  // Plugin management (our custom plugin system)
   registerPlugin(plugin: AgentPlugin): void;
   getPlugin(name: string): AgentPlugin | undefined;
   listPlugins(): AgentPlugin[];
   
-  // Storage and security
-  secureStorage: SecureStorage;
-  keyManager: KeyManager;
-  didManager?: any; // Veramo DID manager
-} 
+  // DID operations (standardized on Veramo)
+  createDID(method: string, options?: CreateDIDOptions): Promise<IIdentifier>;
+  resolveDID(did: string): Promise<DIDDocument>;
+  sign(data: any, options?: any): Promise<any>;
+  
+  // Credential verification
+  verifyCredential(credential: any): Promise<ValidationResult>;
+  
+  // Resource management (our custom functionality)
+  publishResource(params: Omit<CreateResourceParams, 'did'>): Promise<ResourceMetadata>;
+  getResource(resourceId: string): Promise<ResourceMetadata | null>;
+  updateResource(resourceId: string, updates: UpdateResourceParams): Promise<ResourceMetadata>;
+  deleteResource(resourceId: string): Promise<boolean>;
+  listResources(options?: { limit?: number; offset?: number }): Promise<ResourceListResult>;
+  
+  // Enhanced storage operations
+  exportAgentBackup(passphrase: string): Promise<string>;
+  importAgentBackup(data: string, passphrase: string): Promise<void>;
+  rotateAgentEncryptionKey(oldPassphrase: string, newPassphrase: string): Promise<void>;
+  getAgentAccessLog(): Promise<any[]>;
+  
+  // Utility methods
+  getAgentDebugInfo(): any;
+};
+
+

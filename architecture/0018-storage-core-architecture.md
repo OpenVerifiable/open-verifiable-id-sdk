@@ -83,10 +83,10 @@ export class SecureStorageImpl implements SecureStorage {
   private platform: Platform;
   private encryptionKey: string;
   private accessLog: AccessLogEntry[] = [];
-  private agent?: OVAgent; // Optional agent reference
+  private agent?: OpenVerifiableAgent; // Optional agent reference
   private agentId?: string; // Agent-specific storage prefix
 
-  constructor(encryptionKey?: string, agent?: OVAgent) {
+  constructor(encryptionKey?: string, agent?: OpenVerifiableAgent) {
     this.platform = PlatformDetector.detectPlatform();
     this.encryptionKey = encryptionKey || this.generateEncryptionKey();
     this.agent = agent;
@@ -149,7 +149,7 @@ private async nodeStore(key: string, data: string): Promise<void> {
 ```typescript
 private async browserStore(key: string, data: string): Promise<void> {
   if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(`ov-id-sdk:${key}`, data);
+    localStorage.setItem(`open-verifiable-id-sdk:${key}`, data);
   } else {
     throw new Error('Browser storage not available');
   }

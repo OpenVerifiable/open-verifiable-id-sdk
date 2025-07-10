@@ -4,7 +4,7 @@
  * Based on ADR-0007: Agent Architecture and Extensibility
  */
 
-import { BaseAgent } from './base';
+import { BaseAgent } from './base.js';
 import {
   IIdentifier,
   VerifiableCredential,
@@ -12,7 +12,9 @@ import {
   CredentialTemplate,
   CreateDIDOptions,
   AgentType,
-  TrustStatus
+  TrustStatus,
+  DataIntegrityProof,
+  JwtProof
 } from '../../types';
 
 export interface ServiceAgentConfig {
@@ -237,6 +239,11 @@ export class ServiceAgent extends BaseAgent {
 
   getCapabilities(): string[] {
     return [
+      'create-service-did',
+      'issue-service-credentials',
+      'manage-service-endpoints',
+      'manage-api-keys',
+      'verify-external-credentials',
       'external-verification',
       'trust-registry-query',
       'revocation-checking',
@@ -253,6 +260,7 @@ export class ServiceAgent extends BaseAgent {
       did: didId,
       controllerKeyId: keyId,
       provider: `did:${method}`,
+      alias: options?.alias || `service-${this.serviceId}`,
       keys: [{
         kid: keyId,
         type: 'Ed25519',
@@ -273,11 +281,12 @@ export class ServiceAgent extends BaseAgent {
     const credentialId = `urn:uuid:${this.generateId()}`;
     
     return {
-      '@context': ['https://www.w3.org/ns/credentials/v2'],
+      '@context': template['@context'] || ['https://www.w3.org/ns/credentials/v2'],
       id: credentialId,
       type: ['VerifiableCredential', ...template.type],
       issuer: typeof template.issuer === 'string' ? template.issuer : template.issuer.id,
-      validFrom: new Date().toISOString(),
+      validFrom: template.validFrom || new Date().toISOString(),
+      validUntil: template.validUntil,
       credentialSubject: {
         ...template.credentialSubject,
         serviceId: this.serviceId,
@@ -296,15 +305,80 @@ export class ServiceAgent extends BaseAgent {
 
   async verifyCredential(credential: VerifiableCredential): Promise<ValidationResult> {
     // Service-specific credential verification
+    const validationErrors: string[] = [];
+    const warnings: string[] = [];
+
+    // Check if credential has required fields
+    if (!credential['@context']) {
+      validationErrors.push('Missing @context');
+    }
+
+    if (!credential.type || !Array.isArray(credential.type)) {
+      validationErrors.push('Missing or invalid type');
+    }
+
+    if (!credential.issuer) {
+      validationErrors.push('Missing issuer');
+    }
+
+    if (!credential.credentialSubject) {
+      validationErrors.push('Missing credentialSubject');
+    }
+
+    // Check if credential has proof
+    if (!credential.proof) {
+      validationErrors.push('Missing proof');
+    } else {
+      // Validate proof structure based on type
+      if (!credential.proof.type) {
+        validationErrors.push('Missing proof type');
+      } else if (credential.proof.type === 'DataIntegrityProof') {
+        const dataIntegrityProof = credential.proof as DataIntegrityProof;
+        if (!dataIntegrityProof.verificationMethod) {
+          validationErrors.push('Missing verification method');
+        }
+      } else if (credential.proof.type === 'JsonWebSignature2020') {
+        const jwtProof = credential.proof as JwtProof;
+        if (!jwtProof.jwt) {
+          validationErrors.push('Missing JWT in proof');
+        }
+      }
+    }
+
+    // Check expiry if validUntil is present
+    if (credential.validUntil) {
+      const now = new Date();
+      const validUntil = new Date(credential.validUntil);
+      if (validUntil < now) {
+        validationErrors.push('Credential has expired');
+      }
+    }
+
     return {
-      isValid: true,
-      validationErrors: [],
-      warnings: []
+      isValid: validationErrors.length === 0,
+      trustStatus: {
+        status: validationErrors.length === 0 ? TrustStatus.TRUSTED : TrustStatus.UNTRUSTED,
+        lastChecked: new Date().toISOString(),
+        source: 'service-verification'
+      },
+      validationErrors,
+      warnings
     };
   }
 
   // Service-specific methods
   async addServiceEndpoint(name: string, url: string): Promise<void> {
+    if (!name || name.trim() === '') {
+      throw new Error('Service endpoint name cannot be empty');
+    }
+    
+    // Basic URL validation
+    try {
+      new URL(url);
+    } catch {
+      throw new Error('Invalid URL format');
+    }
+    
     this.serviceEndpoints.set(name, url);
   }
 
@@ -345,10 +419,15 @@ export class ServiceAgent extends BaseAgent {
   }
 
   async issueServiceCredential(serviceType: string, metadata: any): Promise<VerifiableCredential> {
+    // Check if service DID exists
+    if (!this.serviceDID) {
+      throw new Error('Service DID not created. Call createServiceDID() first.');
+    }
+
     const template: CredentialTemplate = {
       '@context': ['https://www.w3.org/ns/credentials/v2'],
       type: ['ServiceCredential', serviceType],
-      issuer: this.serviceDID || 'did:key:service',
+      issuer: this.serviceDID,
       validFrom: new Date().toISOString(),
       credentialSubject: {
         id: this.agentId,

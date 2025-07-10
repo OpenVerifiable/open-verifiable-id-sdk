@@ -15,7 +15,7 @@ import {
 import {
   VerifiableCredential_2_0,
   SecureStorage,
-  OvIdAgent,
+  OpenVerifiableAgent,
   CredentialTemplate,
   AgentType,
   ValidationResult,
@@ -126,7 +126,7 @@ class MockSecureStorage implements SecureStorage {
 }
 
 // Mock Agent
-class MockAgent implements OvIdAgent {
+class MockAgent implements OpenVerifiableAgent {
   readonly id = 'did:example:agent'
   readonly agentId = 'did:example:agent'
   readonly agentType = AgentType.USER

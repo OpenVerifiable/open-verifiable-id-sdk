@@ -1,6 +1,6 @@
 import {
   CredentialTemplate,
-  OvIdAgent,
+  OpenVerifiableAgent,
   ValidationResult,
   VerifiableCredential_2_0,
   TrustRegistryClient,
@@ -19,7 +19,7 @@ import {
 
 export interface CredentialClientOptions {
   /** Optional agent used for signing & verification */
-  agent?: OvIdAgent
+  agent?: OpenVerifiableAgent
   /** Optional trust-registry client for issuer trust checks */
   trustRegistry?: TrustRegistryClient
   /** Optional revocation client for revocation checks */
@@ -31,14 +31,14 @@ export interface CredentialClientOptions {
 /**
  * Stand-alone component that centralises Verifiable Credential issuance and verification.
  *
- * ‑ Issues credentials by delegating to an OvIdAgent when available.
+ * ‑ Issues credentials by delegating to an OpenVerifiableAgent when available.
  * ‑ Verifies credentials through the agent and augments the result with trust-registry and revocation status.
  *
  * Designed to decouple credential logic from individual agent implementations and enable reuse in services,
  * CLIs or serverless functions that do not require full agent capabilities.
  */
 export class CredentialClient {
-  private readonly agent?: OvIdAgent
+  private readonly agent?: OpenVerifiableAgent
   private readonly trustRegistry?: TrustRegistryClient
   private readonly revocation?: RevocationClient
   private readonly keyManager?: CredentialKeyManager

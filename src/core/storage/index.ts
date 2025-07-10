@@ -14,12 +14,12 @@
  */
 
 // Re-export the main client class
-export { StorageClient, createSecureStorage } from './client'
+export { StorageClient, createSecureStorage } from './client.js'
 
 // Re-export public types and interfaces
-export type { StorageClientOptions } from './client'
+export type { StorageClientOptions } from './client.js'
 
 // Re-export storage implementations
-export * from './types'
-export * from './memory'
-export * from './secure-storage' 
+export * from './types.js'
+export * from './memory.js'
+export * from './secure-storage.js' 

@@ -3,7 +3,7 @@ import { BaseAgent } from '../../../src/core/agents/base';
 import { 
   AgentPlugin, 
   PluginInfo, 
-  OvIdAgent, 
+  OpenVerifiableAgent, 
   CreateDIDOptions, 
   ValidationResult,
   IIdentifier,

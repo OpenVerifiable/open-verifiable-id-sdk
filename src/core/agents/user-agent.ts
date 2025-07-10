@@ -3,7 +3,7 @@
  * Uses Veramo framework with Cheqd and DID key support
  */
 
-import { BaseAgent } from './base';
+import { BaseAgent } from './base.js';
 import {
   IIdentifier,
   VerifiableCredential,
@@ -59,6 +59,9 @@ export class UserAgent extends BaseAgent {
 
   async setPrimaryDID(did: string): Promise<void> {
     // Verify the DID exists and is controlled by this agent
+    if (!this.agent) {
+      throw new Error('Agent not initialized');
+    }
     const didDoc = await this.agent.resolveDid({ didUrl: did });
     if (!didDoc) {
       throw new Error(`DID ${did} not found`);
@@ -97,13 +100,21 @@ export class UserAgent extends BaseAgent {
     }
 
     try {
-      return await this.agent.createVerifiableCredential({
+      if (!this.agent) {
+        throw new Error('Agent not initialized');
+      }
+      const result = await this.agent.createVerifiableCredential({
         credential: {
           ...credential,
           issuer: signingDID
         },
         proofFormat: 'jwt'
       });
+      
+      return {
+        ...result,
+        validFrom: credential.validFrom || new Date().toISOString()
+      } as unknown as VerifiableCredential;
     } catch (err) {
       const error = err as Error;
       throw new Error(`Failed to sign credential: ${error.message}`);
@@ -111,26 +122,15 @@ export class UserAgent extends BaseAgent {
   }
 
   async issueCredential(template: CredentialTemplate): Promise<VerifiableCredential> {
-    // Validation logic matching the mock
-    if (!template.type || !Array.isArray(template.type) || template.type.length === 0) {
-      throw new Error('Credential type is required and must be a non-empty array');
-    }
-    if (!template.credentialSubject || Object.keys(template.credentialSubject).length === 0) {
-      throw new Error('Credential subject is required and cannot be empty');
-    }
-    try {
-      return await this.agent.createVerifiableCredential({
-        credential: template,
-        proofFormat: 'jwt'
-      });
-    } catch (err) {
-      const error = err as Error;
-      throw new Error(`Failed to issue credential: ${error.message}`);
-    }
+    // Use the base implementation which properly handles the template
+    return await super.issueCredential(template);
   }
 
   async getStoredCredentials(): Promise<VerifiableCredential[]> {
     try {
+      if (!this.agent) {
+        throw new Error('Agent not initialized');
+      }
       // Use the agent's data store to retrieve credentials
       const credentials = await this.agent.dataStoreORMGetVerifiableCredentials();
       return credentials;
@@ -144,6 +144,9 @@ export class UserAgent extends BaseAgent {
     try {
       console.log(`Exporting wallet for user: ${this.agentId}`)
       // Export DIDs, keys, and credentials
+      if (!this.agent) {
+        throw new Error('Agent not initialized');
+      }
       const dids = await this.agent.didManagerFind();
       const credentials = await this.getStoredCredentials();
       

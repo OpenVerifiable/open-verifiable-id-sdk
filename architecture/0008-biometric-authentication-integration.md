@@ -1,6 +1,6 @@
 ---
 ADR: 0008
-Title: ov-id-sdk Biometric Authentication Integration
+Title: open-verifiable-id-sdk Biometric Authentication Integration
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-Modern identity management requires seamless authentication methods that balance security with user experience. Biometric authentication (fingerprint, face recognition, voice recognition) provides strong security while reducing friction for users accessing their credentials and performing identity operations. The ov-id-sdk must support multiple biometric modalities while maintaining user privacy and ensuring fallback options for accessibility.
+Modern identity management requires seamless authentication methods that balance security with user experience. Biometric authentication (fingerprint, face recognition, voice recognition) provides strong security while reducing friction for users accessing their credentials and performing identity operations. The open-verifiable-id-sdk must support multiple biometric modalities while maintaining user privacy and ensuring fallback options for accessibility.
 
 ## Requirements
 
@@ -242,7 +242,7 @@ class BiometricUX {
 - **Customizable Prompts**: Allow users to customize authentication prompts
 - **Assistive Technology**: Ensure compatibility with screen readers and other assistive tools
 
-### 5. Integration with ov-id-sdk
+### 5. Integration with open-verifiable-id-sdk
 
 #### Credential Access
 ```typescript

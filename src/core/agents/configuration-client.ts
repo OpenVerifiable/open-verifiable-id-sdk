@@ -6,8 +6,8 @@
  * Implements ADR-0007: Agent Architecture and Extensibility
  */
 
-import { AgentConfigurationManager } from './configuration-manager';
-import { AgentFactory, createAgent } from './factory';
+import { AgentConfigurationManager } from './configuration-manager.js';
+import { AgentFactory, createAgent } from './factory.js';
 import {
   AgentConfiguration,
   AgentConfigurationManagerOptions,
@@ -15,8 +15,8 @@ import {
   AgentConfigurationExport,
   AgentConfigurationMigrationResult,
   AgentConfigurationValidationResult
-} from './types';
-import { AgentType, OVAgent } from '../../types';
+} from './types.js';
+import { AgentType, OpenVerifiableAgent } from '../../types/index.js';
 
 /**
  * Agent Configuration Client Options
@@ -71,7 +71,7 @@ export class AgentConfigurationClient {
     agentId: string,
     agentType: AgentType,
     config?: Partial<AgentConfiguration>
-  ): Promise<OVAgent> {
+  ): Promise<OpenVerifiableAgent> {
     await this.ensureInitialized();
 
     // Create configuration first
@@ -80,7 +80,7 @@ export class AgentConfigurationClient {
     // Create agent using convenience function
     const agent = await createAgent(agentType, agentId, agentConfig);
 
-    return agent as OVAgent;
+    return agent as OpenVerifiableAgent;
   }
 
   /**
@@ -90,7 +90,7 @@ export class AgentConfigurationClient {
     templateName: string,
     agentId: string,
     overrides?: Partial<AgentConfiguration>
-  ): Promise<OVAgent> {
+  ): Promise<OpenVerifiableAgent> {
     await this.ensureInitialized();
 
     // Create configuration from template
@@ -99,7 +99,7 @@ export class AgentConfigurationClient {
     // Create agent using convenience function
     const agent = await createAgent(agentConfig.agentType, agentId, agentConfig);
 
-    return agent as OVAgent;
+    return agent as OpenVerifiableAgent;
   }
 
   /**
@@ -184,28 +184,28 @@ export class AgentConfigurationClient {
   /**
    * Create a quick user agent with basic configuration
    */
-  async createQuickUserAgent(userId: string): Promise<OVAgent> {
+  async createQuickUserAgent(userId: string): Promise<OpenVerifiableAgent> {
     return await this.createAgentFromTemplate('basic-user', `user-${userId}`);
   }
 
   /**
    * Create a secure user agent with high-security configuration
    */
-  async createSecureUserAgent(userId: string): Promise<OVAgent> {
+  async createSecureUserAgent(userId: string): Promise<OpenVerifiableAgent> {
     return await this.createAgentFromTemplate('secure-user', `user-${userId}`);
   }
 
   /**
    * Create a service agent for credential issuance
    */
-  async createServiceAgent(serviceId: string): Promise<OVAgent> {
+  async createServiceAgent(serviceId: string): Promise<OpenVerifiableAgent> {
     return await this.createAgentFromTemplate('service-agent', `service-${serviceId}`);
   }
 
   /**
    * Create a package agent for package management
    */
-  async createPackageAgent(packageId: string): Promise<OVAgent> {
+  async createPackageAgent(packageId: string): Promise<OpenVerifiableAgent> {
     return await this.createAgent(`package-${packageId}`, AgentType.PACKAGE, {
       security: {
         encryptionLevel: 'standard',
@@ -240,7 +240,7 @@ export class AgentConfigurationClient {
   /**
    * Create a parent agent for managing child agents
    */
-  async createParentAgent(parentId: string): Promise<OVAgent> {
+  async createParentAgent(parentId: string): Promise<OpenVerifiableAgent> {
     return await this.createAgent(`parent-${parentId}`, AgentType.PARENT, {
       security: {
         encryptionLevel: 'high',
@@ -394,7 +394,7 @@ export function createAgentConfigurationClient(
 export async function createQuickUserAgent(
   userId: string,
   options?: AgentConfigurationClientOptions
-): Promise<OVAgent> {
+): Promise<OpenVerifiableAgent> {
   const client = createAgentConfigurationClient(options);
   await client.initialize();
   return await client.createQuickUserAgent(userId);
@@ -406,7 +406,7 @@ export async function createQuickUserAgent(
 export async function createSecureUserAgent(
   userId: string,
   options?: AgentConfigurationClientOptions
-): Promise<OVAgent> {
+): Promise<OpenVerifiableAgent> {
   const client = createAgentConfigurationClient(options);
   await client.initialize();
   return await client.createSecureUserAgent(userId);

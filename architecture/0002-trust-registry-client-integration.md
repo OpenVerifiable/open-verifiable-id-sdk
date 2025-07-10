@@ -1,6 +1,6 @@
 ---
 ADR: 0002
-Title: ov-id-sdk Trust Registry Client Integration
+Title: open-verifiable-id-sdk Trust Registry Client Integration
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-ov-id-sdk needs to validate credentials against trust registries to ensure issuers are trusted. However, trust registries are not standardized yet, and we want to avoid external dependencies or subscriptions. The solution must provide robust trust validation while maintaining user sovereignty and working completely offline.
+open-verifiable-id-sdk needs to validate credentials against trust registries to ensure issuers are trusted. However, trust registries are not standardized yet, and we want to avoid external dependencies or subscriptions. The solution must provide robust trust validation while maintaining user sovereignty and working completely offline.
 
 ## Requirements
 
@@ -171,7 +171,7 @@ interface TrustRegistryProvider {
 - **Integration**: Plugin-based architecture
 - **Use Case**: Standards-compliant trust validation
 
-### 5. Integration with ov-id-sdk
+### 5. Integration with open-verifiable-id-sdk
 
 #### Credential Validation Integration
 ```typescript
@@ -228,9 +228,9 @@ const defaultTrustRegistry: TrustRegistry = {
     }
   ],
   metadata: {
-    name: 'ov-id-sdk Default Trust Registry',
-    description: 'Default trusted issuers for ov-id-sdk',
-    source: 'ov-id-sdk',
+          name: 'open-verifiable-id-sdk Default Trust Registry',
+      description: 'Default trusted issuers for open-verifiable-id-sdk',
+      source: 'open-verifiable-id-sdk',
     maintainer: 'OriginVault'
   }
 };

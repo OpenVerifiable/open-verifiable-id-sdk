@@ -1,5 +1,5 @@
 ADR: 0009
-Title: ov-id-sdk Testing & Validation Strategy
+Title: open-verifiable-id-sdk Testing & Validation Strategy
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -19,7 +19,7 @@ Runbook: |
 
 ## Context
 
-The ov-id-sdk handles mission-critical identity operations including DID management, credential issuance, and cryptographic signing. Any bugs or regressions in these areas can compromise user security, data integrity, and trust. A comprehensive testing strategy is essential to ensure SDK reliability, catch bugs early, and maintain high code quality as the SDK evolves.
+The open-verifiable-id-sdk handles mission-critical identity operations including DID management, credential issuance, and cryptographic signing. Any bugs or regressions in these areas can compromise user security, data integrity, and trust. A comprehensive testing strategy is essential to ensure SDK reliability, catch bugs early, and maintain high code quality as the SDK evolves.
 
 ## Requirements
 

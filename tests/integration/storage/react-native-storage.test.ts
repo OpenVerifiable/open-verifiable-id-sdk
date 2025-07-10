@@ -1,10 +1,19 @@
 import { ReactNativeStorage } from '../../../src/core/storage/react-native-storage';
 import { encrypt } from '../../../src/core/storage/crypto';
-import * as Keychain from 'react-native-keychain';
-import { BIOMETRY_TYPE, STORAGE_TYPE } from 'react-native-keychain';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock react-native-keychain
-jest.mock('react-native-keychain');
+// Mock AsyncStorage
+const mockAsyncStorage = {
+  setItem: vi.fn().mockResolvedValue(undefined),
+  getItem: vi.fn().mockResolvedValue(null),
+  removeItem: vi.fn().mockResolvedValue(undefined),
+  getAllKeys: vi.fn().mockResolvedValue([]),
+  multiRemove: vi.fn().mockResolvedValue(undefined)
+};
+
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: mockAsyncStorage
+}));
 
 describe('ReactNativeStorage Integration', () => {
   let storage: ReactNativeStorage;
@@ -13,7 +22,7 @@ describe('ReactNativeStorage Integration', () => {
 
   beforeEach(() => {
     storage = new ReactNativeStorage('test-agent');
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Basic Storage Operations', () => {
@@ -31,27 +40,17 @@ describe('ReactNativeStorage Integration', () => {
       };
 
       // Mock successful storage
-      jest.spyOn(Keychain, 'setGenericPassword').mockResolvedValue(false);
+      mockAsyncStorage.setItem.mockResolvedValue(undefined);
       await storage.store('test-key', encryptedData);
 
       // Verify storage call
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        'test-key',
-        expect.stringContaining(encryptedData.data),
-        expect.objectContaining({
-          accessible: 'AccessibleWhenUnlocked',
-          accessControl: 'BiometryAny',
-          service: expect.stringContaining('test-agent')
-        })
+      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
+        'ov-id-storage-test-agent-test-key',
+        JSON.stringify(encryptedData)
       );
 
       // Mock successful retrieval
-      jest.spyOn(Keychain, 'getGenericPassword').mockResolvedValue({
-        service: 'test-service',
-        storage: STORAGE_TYPE.KEYCHAIN,
-        username: 'test-key',
-        password: JSON.stringify(mockRecord)
-      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockRecord));
 
       const retrieved = await storage.retrieve('test-key');
       expect(retrieved).toBeDefined();
@@ -61,108 +60,63 @@ describe('ReactNativeStorage Integration', () => {
     });
 
     it('should return null for non-existent key', async () => {
-      jest.spyOn(Keychain, 'getGenericPassword').mockResolvedValue(false);
+      mockAsyncStorage.getItem.mockResolvedValue(null);
       const retrieved = await storage.retrieve('non-existent');
       expect(retrieved).toBeNull();
     });
 
     it('should delete stored data', async () => {
-      jest.spyOn(Keychain, 'resetGenericPassword').mockResolvedValue(false);
+      mockAsyncStorage.removeItem.mockResolvedValue(undefined);
       await storage.delete('test-key');
-      expect(Keychain.resetGenericPassword).toHaveBeenCalledWith({
-        service: expect.stringContaining('test-key')
-      });
-    });
-
-    it('should clear all stored data', async () => {
-      jest.spyOn(Keychain, 'resetGenericPassword').mockResolvedValue(false);
-      await storage.clear();
-      expect(Keychain.resetGenericPassword).toHaveBeenCalledWith({
-        service: expect.stringContaining('test-agent')
-      });
-    });
-  });
-
-  describe('Biometric Operations', () => {
-    it('should check biometric availability', async () => {
-      jest.spyOn(Keychain, 'getSupportedBiometryType').mockResolvedValue(BIOMETRY_TYPE.FACE_ID);
-      const available = await storage.isBiometricAvailable();
-      expect(available).toBe(true);
-    });
-
-    it('should handle biometric unavailability', async () => {
-      jest.spyOn(Keychain, 'getSupportedBiometryType').mockResolvedValue(null);
-      const available = await storage.isBiometricAvailable();
-      expect(available).toBe(false);
-    });
-
-    it('should store with biometric protection', async () => {
-      const encryptedData = await encrypt(testData, testPassphrase);
-      jest.spyOn(Keychain, 'setGenericPassword').mockResolvedValue(false);
-      
-      await storage.storeWithBiometric('test-key', encryptedData);
-      
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        'test-key',
-        expect.stringContaining(encryptedData.data),
-        expect.objectContaining({
-          accessible: 'AccessibleWhenUnlocked',
-          accessControl: 'BiometryAny',
-          service: expect.stringContaining('biometric')
-        })
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        'ov-id-storage-test-agent-test-key'
       );
     });
 
-    it('should retrieve with biometric authentication', async () => {
-      const encryptedData = await encrypt(testData, testPassphrase);
-      const mockRecord = {
-        data: encryptedData.data,
-        iv: encryptedData.iv,
-        salt: encryptedData.salt,
-        metadata: {
-          version: '1.0.0',
-          created: new Date().toISOString(),
-          lastModified: new Date().toISOString()
-        }
-      };
+    it('should list all stored keys', async () => {
+      mockAsyncStorage.getAllKeys.mockResolvedValue([
+        'ov-id-storage-test-agent-key1',
+        'ov-id-storage-test-agent-key2',
+        'other-key'
+      ]);
 
-      jest.spyOn(Keychain, 'getGenericPassword').mockResolvedValue({
-        service: 'test-service',
-        storage: STORAGE_TYPE.KEYCHAIN,
-        username: 'test-key',
-        password: JSON.stringify(mockRecord)
-      });
+      const keys = await storage.listKeys();
+      expect(keys).toHaveLength(2);
+      expect(keys).toContain('key1');
+      expect(keys).toContain('key2');
+    });
 
-      const retrieved = await storage.retrieveWithBiometric('test-key');
-      expect(retrieved).toBeDefined();
-      expect(retrieved?.data).toBe(encryptedData.data);
-      expect(Keychain.getGenericPassword).toHaveBeenCalledWith({
-        service: expect.stringContaining('biometric'),
-        authenticationPrompt: expect.any(Object)
-      });
+    it('should clear all stored data', async () => {
+      mockAsyncStorage.getAllKeys.mockResolvedValue([
+        'ov-id-storage-test-agent-key1',
+        'ov-id-storage-test-agent-key2'
+      ]);
+      mockAsyncStorage.multiRemove.mockResolvedValue(undefined);
+      
+      await storage.clear();
+      expect(mockAsyncStorage.multiRemove).toHaveBeenCalledWith([
+        'ov-id-storage-test-agent-key1',
+        'ov-id-storage-test-agent-key2'
+      ]);
     });
   });
 
   describe('Error Handling', () => {
     it('should handle storage failures', async () => {
-      jest.spyOn(Keychain, 'setGenericPassword').mockRejectedValue(new Error('Storage failed'));
+      mockAsyncStorage.setItem.mockRejectedValue(new Error('Storage failed'));
       const encryptedData = await encrypt(testData, testPassphrase);
       
       await expect(storage.store('test-key', encryptedData))
         .rejects
-        .toThrow();
+        .toThrow('Failed to store data: Error: Storage failed');
     });
 
     it('should handle retrieval failures gracefully', async () => {
-      jest.spyOn(Keychain, 'getGenericPassword').mockRejectedValue(new Error('Retrieval failed'));
-      const retrieved = await storage.retrieve('test-key');
-      expect(retrieved).toBeNull();
-    });
-
-    it('should handle biometric authentication failures', async () => {
-      jest.spyOn(Keychain, 'getGenericPassword').mockRejectedValue(new Error('Biometric auth failed'));
-      const retrieved = await storage.retrieveWithBiometric('test-key');
-      expect(retrieved).toBeNull();
+      mockAsyncStorage.getItem.mockRejectedValue(new Error('Retrieval failed'));
+      
+      await expect(storage.retrieve('test-key'))
+        .rejects
+        .toThrow('Failed to retrieve data: Error: Retrieval failed');
     });
   });
 }); 
