@@ -1,0 +1,374 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://open-verifiable.org/schemas/verifiable-plugin.schema.json",
+  "title": "Verifiable Plugin Schema",
+  "description": "Schema for verifiable and unverifiable plugins in the Open Verifiable ecosystem",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "description": "Unique identifier for the plugin",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the plugin"
+    },
+    "version": {
+      "type": "string",
+      "description": "Plugin version in semver format",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.-]+)?(\\+[a-zA-Z0-9.-]+)?$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Plugin description"
+    },
+    "pluginType": {
+      "type": "string",
+      "enum": ["unverifiable", "verifiable"],
+      "description": "Type of plugin - unverifiable (standard npm) or verifiable (cryptographically protected)"
+    },
+    "verificationLevel": {
+      "type": "string",
+      "enum": ["none", "basic", "full", "enterprise"],
+      "description": "Level of verification required for the plugin"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["did-method", "credential-type", "crypto-suite", "utility", "integration", "custom"],
+      "description": "Category of the plugin"
+    },
+    "author": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Author name"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Author email"
+        },
+        "did": {
+          "type": "string",
+          "description": "Author DID (required for verifiable plugins)"
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "description": "Author website"
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["git", "npm", "custom"],
+          "description": "Repository type"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Repository URL"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Default branch"
+        }
+      },
+      "required": ["type", "url"],
+      "additionalProperties": false
+    },
+    "license": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "License type (MIT, Apache-2.0, etc.)"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "License URL"
+        },
+        "text": {
+          "type": "string",
+          "description": "License text"
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Plugin dependencies",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "peerDependencies": {
+      "type": "object",
+      "description": "Peer dependencies",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "devDependencies": {
+      "type": "object",
+      "description": "Development dependencies",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Search keywords for the plugin"
+    },
+    "engines": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "type": "string",
+          "description": "Required Node.js version"
+        },
+        "npm": {
+          "type": "string",
+          "description": "Required npm version"
+        }
+      },
+      "additionalProperties": false
+    },
+    "os": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["darwin", "linux", "win32", "freebsd", "openbsd", "sunos", "aix", "android", "ios"]
+      },
+      "description": "Supported operating systems"
+    },
+    "cpu": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["x64", "arm64", "arm", "ia32", "mips", "mipsel", "ppc", "ppc64", "s390", "s390x"]
+      },
+      "description": "Supported CPU architectures"
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "integrityHash": {
+          "type": "string",
+          "description": "SHA-256 hash of plugin integrity"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Cryptographic signature of the plugin"
+        },
+        "signatureAlgorithm": {
+          "type": "string",
+          "enum": ["ed25519", "secp256k1", "rsa"],
+          "description": "Algorithm used for signature"
+        },
+        "verificationCredential": {
+          "type": "object",
+          "description": "Verifiable credential proving plugin authenticity"
+        },
+        "statusListDID": {
+          "type": "string",
+          "description": "DID-Linked Resource for revocation status"
+        },
+        "statusListIndex": {
+          "type": "number",
+          "description": "Index in the status list"
+        },
+            "sourceVerification": {
+      "type": "object",
+      "properties": {
+        "sourceDID": {
+          "type": "string",
+          "description": "DID:key derived from source files"
+        },
+        "bundleHash": {
+          "type": "string",
+          "description": "Hash of all source files"
+        },
+        "releaseCredential": {
+          "type": "string",
+          "description": "DID-Linked Resource credential ID"
+        },
+        "packageDID": {
+          "type": "string",
+          "description": "Package's Cheqd DID on blockchain"
+        },
+        "identityAggregated": {
+          "type": "boolean",
+          "description": "Whether creator has identity aggregation claims"
+        }
+      },
+      "required": ["sourceDID", "bundleHash", "packageDID"],
+      "additionalProperties": false
+    },
+    "trustChain": {
+      "type": "object",
+      "properties": {
+        "rTAO": {
+          "type": "string",
+          "description": "Root Trusted Accreditation Organization DID"
+        },
+        "platformAccreditation": {
+          "type": "string",
+          "description": "Platform accreditation credential ID"
+        },
+        "creatorAccreditation": {
+          "type": "string",
+          "description": "Creator accreditation credential ID"
+        },
+        "dnsAnchored": {
+          "type": "boolean",
+          "description": "Whether rTAO is anchored in DNS"
+        },
+        "governanceFramework": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to governance framework document"
+        },
+        "trustLevel": {
+          "type": "string",
+          "enum": ["verified", "accredited", "certified"],
+          "description": "Trust level in the chain"
+        }
+      },
+      "required": ["rTAO", "trustLevel"],
+      "additionalProperties": false
+    }
+      },
+      "additionalProperties": false
+    },
+    "monetization": {
+      "type": "object",
+      "properties": {
+        "requiresLicense": {
+          "type": "boolean",
+          "description": "Whether the plugin requires a license"
+        },
+        "licenseType": {
+          "type": "string",
+          "enum": ["free", "paid", "subscription", "usage-based"],
+          "description": "Type of license required"
+        },
+        "price": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Price amount"
+            },
+            "currency": {
+              "type": "string",
+              "description": "Price currency (USD, EUR, etc.)"
+            },
+            "description": {
+              "type": "string",
+              "description": "Price description"
+            }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false
+        },
+        "validityPeriod": {
+          "type": "number",
+          "minimum": 1,
+          "description": "License validity period in days"
+        },
+        "usageLimits": {
+          "type": "object",
+          "properties": {
+            "maxInstalls": {
+              "type": "number",
+              "description": "Maximum number of installations"
+            },
+            "maxUsage": {
+              "type": "number",
+              "description": "Maximum usage count"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "License expiration date"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "sandboxMode": {
+          "type": "boolean",
+          "description": "Whether plugin runs in sandboxed mode"
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["file-system", "network", "crypto", "storage", "ui", "none"]
+          },
+          "description": "Required permissions for the plugin"
+        },
+        "csp": {
+          "type": "string",
+          "description": "Content Security Policy for the plugin"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the plugin",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Plugin creation timestamp"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Plugin last update timestamp"
+    }
+  },
+  "required": ["pluginId", "name", "version", "pluginType", "category", "author"],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "pluginType": { "const": "verifiable" }
+        }
+      },
+      "then": {
+        "properties": {
+          "author": {
+            "required": ["did"]
+          },
+          "verification": {
+            "required": ["integrityHash", "signature", "signatureAlgorithm", "sourceVerification"]
+          }
+        }
+      }
+    }
+  ]
+} 

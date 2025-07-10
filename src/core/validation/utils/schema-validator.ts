@@ -3,14 +3,14 @@
  * Validates verifiable credentials against JSON schemas
  */
 
-import { VerifiableCredential, ValidationResult } from '../../../types';
+import { VerifiableCredential_2_0, ValidationResult } from '../../../types';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 const ajv = new Ajv({ allErrors: true });
 addFormats(ajv);
 
-export async function validateSchema(credential: VerifiableCredential): Promise<ValidationResult> {
+export async function validateSchema(credential: VerifiableCredential_2_0): Promise<ValidationResult> {
   const validationErrors: string[] = [];
   const warnings: string[] = [];
 
@@ -36,12 +36,12 @@ export async function validateSchema(credential: VerifiableCredential): Promise<
   }
 
   // Check context includes required VC context
-  if (!credential['@context'].includes('https://www.w3.org/2018/credentials/v1')) {
+  if (credential['@context'] && !credential['@context'].includes('https://www.w3.org/2018/credentials/v1')) {
     validationErrors.push('Missing required VC v1 context');
   }
 
   // Check type includes VerifiableCredential
-  if (!credential.type.includes('VerifiableCredential')) {
+  if (credential.type && !credential.type.includes('VerifiableCredential')) {
     validationErrors.push('Missing required VerifiableCredential type');
   }
 

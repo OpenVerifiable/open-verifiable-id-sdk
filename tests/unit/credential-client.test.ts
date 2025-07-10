@@ -3,74 +3,42 @@ import {
   CredentialTemplate,
   VerifiableCredential_2_0,
   ValidationResult,
-  OvIdAgent,
+  OpenVerifiableAgent,
   AgentType,
-  AgentPlugin
+  AgentPlugin,
+  TrustStatusInfo,
+  RevocationStatusInfo
 } from '../../src/types'
 import { LocalTrustRegistryClient } from '../../src/core/trust-registry'
 import { RevocationClient } from '../../src/core/revocation/client'
 
-/**
- * Simple mock agent implementing minimal OvIdAgent behaviour
- */
-class MockAgent implements OvIdAgent {
-  readonly id: string = 'did:example:issuer'
-  readonly agentId: string = 'did:example:issuer'
-  readonly agentType: AgentType = AgentType.USER
-  private plugins = new Map<string, AgentPlugin>()
+// Create a simple mock agent for testing
+class MockAgent implements OpenVerifiableAgent {
+  readonly id = 'did:test:agent'
+  readonly agentId = 'did:test:agent'
+  readonly agentType = AgentType.USER
 
-  getType (): string {
+  getType(): string {
     return 'mock'
   }
 
-  async initialize(): Promise<void> {
-    // Mock initialization
-  }
-
-  async cleanup(): Promise<void> {
-    // Mock cleanup
-  }
-
-  async destroy(): Promise<void> {
-    // Mock destroy
-  }
-
-  async createDID(): Promise<any> {
-    return { did: this.id }
-  }
-
-  registerPlugin(plugin: AgentPlugin): void {
-    this.plugins.set(plugin.name, plugin)
-  }
-
-  getPlugin(name: string): AgentPlugin | undefined {
-    return this.plugins.get(name)
-  }
-
-  listPlugins(): AgentPlugin[] {
-    return Array.from(this.plugins.values())
-  }
-
-  async issueCredential (template: CredentialTemplate): Promise<VerifiableCredential_2_0> {
+  async issueCredential(template: CredentialTemplate): Promise<VerifiableCredential_2_0> {
     return {
-      '@context': template['@context'] || ['https://www.w3.org/ns/credentials/v2'],
-      id: `urn:uuid:mock-${Date.now()}`,
+      '@context': template['@context'],
+      id: `urn:uuid:${Date.now()}`,
       type: template.type,
-      issuer: template.issuer || this.id,
+      issuer: template.issuer,
       validFrom: template.validFrom || new Date().toISOString(),
       credentialSubject: template.credentialSubject,
       proof: {
-        type: 'DataIntegrityProof' as const,
-        cryptosuite: 'eddsa-jcs-2022',
-        created: new Date().toISOString(),
-        verificationMethod: this.id,
-        proofPurpose: 'assertionMethod' as const,
-        proofValue: 'stub'
+        type: 'JsonWebSignature2020',
+        jwt: 'mock-jwt-token'
       }
     }
   }
 
-  async verifyCredential (_credential: VerifiableCredential_2_0): Promise<ValidationResult> {
+  async verifyCredential(credential: VerifiableCredential_2_0): Promise<ValidationResult> {
+    // Mock verification - always return valid for testing
     return {
       isValid: true,
       validationErrors: [],
@@ -78,70 +46,153 @@ class MockAgent implements OvIdAgent {
     }
   }
 
-  // Unused storage-related methods for tests
-  async getCredential (): Promise<VerifiableCredential_2_0 | null> { return null }
-  async storeCredential (): Promise<void> { }
-  async deleteCredential (): Promise<void> { }
-  async listCredentials (): Promise<VerifiableCredential_2_0[]> { return [] }
+  // Implement other required methods with minimal implementations
+  async getCredential(): Promise<VerifiableCredential_2_0 | null> { return null }
+  async storeCredential(): Promise<void> {}
+  async deleteCredential(): Promise<void> {}
+  async listCredentials(): Promise<VerifiableCredential_2_0[]> { return [] }
+  async initialize(): Promise<void> {}
+  async cleanup(): Promise<void> {}
+  async destroy(): Promise<void> {}
+  registerPlugin(): void {}
+  getPlugin(): undefined { return undefined }
+  listPlugins(): [] { return [] }
+  async createDID(): Promise<any> { return { did: 'did:test:agent' } }
+  async resolveDID(): Promise<any> { return {} }
+  async sign(): Promise<any> { return {} }
+  async verifyCredentialWithValidation(): Promise<ValidationResult> {
+    return { isValid: true, validationErrors: [], warnings: [] }
+  }
+  async publishResource(): Promise<any> { return {} }
+  async getResource(): Promise<any> { return null }
+  async updateResource(): Promise<any> { return {} }
+  async deleteResource(): Promise<boolean> { return true }
+  async listResources(): Promise<any> { return { resources: [] } }
+  async exportAgentBackup(): Promise<string> { return '' }
+  async importAgentBackup(): Promise<void> {}
+  async rotateAgentEncryptionKey(): Promise<void> {}
+  async getAgentAccessLog(): Promise<any[]> { return [] }
+  getAgentDebugInfo(): any { return {} }
 }
 
 describe('CredentialClient', () => {
+  let agent: OpenVerifiableAgent
+  let trustRegistry: LocalTrustRegistryClient
+  let revocationClient: RevocationClient
+
+  beforeEach(async () => {
+    // Use the simple mock agent instead of the complex real agent
+    agent = new MockAgent()
+    trustRegistry = new LocalTrustRegistryClient()
+    revocationClient = new RevocationClient()
+  })
+
   it('verifies credential with trust registry success', async () => {
-    const agent = new MockAgent()
-    const trustRegistry = new LocalTrustRegistryClient() as any
-    await trustRegistry.addTrustedIssuer(agent.id, {
-      name: 'Mock Agent',
+    console.log('🔍 Debug: Test starting')
+    
+    const agentDid = 'did:test:agent'
+    
+    // Add the agent's DID as a trusted issuer
+    await trustRegistry.addTrustedIssuer(agentDid, {
+      name: 'Test User Agent',
       trustLevel: 'verified',
       addedDate: new Date().toISOString(),
       source: 'test'
     })
 
-    const client = new CredentialClient({ agent, trustRegistry })
+    // Verify the DID was added
+    const isTrusted = await trustRegistry.isTrustedIssuer(agentDid)
+    console.log('🔍 Debug: isTrusted after adding =', isTrusted)
+
+    const client = new CredentialClient({ 
+      agent, 
+      trustRegistry: trustRegistry as any 
+    })
 
     const template: CredentialTemplate = {
       '@context': ['https://www.w3.org/ns/credentials/v2'],
       type: ['ExampleCredential'],
-      issuer: agent.id,
-      credentialSubject: { id: 'did:example:123' }
+      issuer: agentDid,
+      credentialSubject: { id: 'did:example:123', name: 'Test' }
     }
 
     const vc = await client.issueCredential(template)
+    console.log('🔍 Debug: credential issuer =', vc.issuer)
+
     const result = await client.verifyCredential(vc)
+    console.log('🔍 Debug: verification result =', result)
 
     expect(result.isValid).toBe(true)
     expect((result.trustStatus as any)?.isTrusted).toBe(true)
   })
 
   it('fails verification if credential revoked', async () => {
-    const agent = new MockAgent()
-    const revocation = new RevocationClient() as any
-    await revocation.addRevokedCredential('urn:uuid:revoked', {
-      issuerDID: agent.id,
+    const client = new CredentialClient({ 
+      agent, 
+      revocation: revocationClient as any 
+    })
+
+    // Create a credential first
+    const template: CredentialTemplate = {
+      '@context': ['https://www.w3.org/ns/credentials/v2'],
+      type: ['ExampleCredential'],
+      issuer: 'did:test:agent',
+      credentialSubject: { id: 'did:example:123', name: 'Test' }
+    }
+
+    const vc = await client.issueCredential(template)
+    
+    // Add the credential to revocation list
+    await revocationClient.addRevokedCredential(vc.id, {
+      issuerDID: 'did:test:agent',
       revokedDate: new Date().toISOString(),
       source: 'test'
     })
 
-    const client = new CredentialClient({ agent, revocation })
-
-    const vc: VerifiableCredential_2_0 = {
-      '@context': ['https://www.w3.org/ns/credentials/v2'],
-      id: 'urn:uuid:revoked',
-      type: ['ExampleCredential'],
-      issuer: agent.id,
-      validFrom: new Date().toISOString(),
-      credentialSubject: { id: 'did:example:123' },
-      proof: {
-        type: 'DataIntegrityProof' as const,
-        cryptosuite: 'eddsa-jcs-2022',
-        created: new Date().toISOString(),
-        verificationMethod: agent.id,
-        proofPurpose: 'assertionMethod' as const,
-        proofValue: 'stub'
-      }
-    }
-
     const result = await client.verifyCredential(vc)
     expect(result.isValid).toBe(false)
     expect((result.revocationStatus as any)?.isRevoked ?? (result.revocationStatus as any)?.status === 'revoked').toBe(true)
+  })
+
+  it('issues credential with mock agent', async () => {
+    const client = new CredentialClient({ agent })
+
+    const template: CredentialTemplate = {
+      '@context': ['https://www.w3.org/ns/credentials/v2'],
+      type: ['TestCredential'],
+      issuer: 'did:test:agent',
+      credentialSubject: { 
+        id: 'did:example:subject',
+        name: 'Test Subject',
+        email: 'test@example.com'
+      }
+    }
+
+    const vc = await client.issueCredential(template)
+
+    expect(vc).toBeDefined()
+    expect(vc.id).toBeDefined()
+    expect(vc.type).toContain('TestCredential')
+    expect(vc.issuer).toBe('did:test:agent')
+    expect(vc.credentialSubject).toEqual(template.credentialSubject)
+    expect(vc.proof).toBeDefined()
+  })
+
+  it('verifies credential with mock agent', async () => {
+    const client = new CredentialClient({ agent })
+
+    const template: CredentialTemplate = {
+      '@context': ['https://www.w3.org/ns/credentials/v2'],
+      type: ['VerifiableCredential'],
+      issuer: 'did:test:agent',
+      credentialSubject: { id: 'did:example:subject', name: 'Test' }
+    }
+
+    const vc = await client.issueCredential(template)
+    const result = await client.verifyCredential(vc)
+
+    expect(result.isValid).toBeDefined()
+    expect(result.validationErrors).toBeDefined()
+    expect(Array.isArray(result.validationErrors)).toBe(true)
   })
 }) 

@@ -11,6 +11,50 @@ export interface QRCodeOptions {
   }
 }
 
+export interface EncodeOptions {
+  compress?: boolean
+}
+
+/**
+ * Encode data for QR code transmission
+ */
+export function encodeData(data: any, options: EncodeOptions = {}): string {
+  const { compress = true } = options
+  
+  try {
+    const jsonString = JSON.stringify(data)
+    
+    if (compress && jsonString.length > 100) {
+      // Simple base64 encoding for compression demo
+      return Buffer.from(jsonString).toString('base64')
+    }
+    
+    return jsonString
+  } catch (error) {
+    throw new Error(`Failed to encode data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
+ * Decode data from QR code transmission
+ */
+export function decodeData(encodedData: string): string {
+  try {
+    // Try to decode as base64 first (compressed)
+    try {
+      const decoded = Buffer.from(encodedData, 'base64').toString('utf-8')
+      // Validate it's valid JSON
+      JSON.parse(decoded)
+      return decoded
+    } catch {
+      // If base64 fails, assume it's plain JSON
+      return encodedData
+    }
+  } catch (error) {
+    throw new Error(`Failed to decode data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
 export async function generateQRCode(
   data: string,
   options: QRCodeOptions = {}
@@ -46,7 +90,7 @@ export async function generateQRCode(
       color
     }
 
-    // Generate QR code as data URL
+    // Generate QR code as data URL (PNG format)
     const qrCodeDataURL = await QRCode.toDataURL(processedData, qrCodeOptions)
     return qrCodeDataURL
   } catch (error) {
@@ -57,7 +101,7 @@ export async function generateQRCode(
 // SVG generation removed due to API compatibility issues
 // Use generateQRCode() which returns a data URL that can be used in img tags
 
-export async function readQRCode(imageData: string): Promise<string> {
+export async function readQRCode(_imageData: string): Promise<string> {
   // This would require a QR code reader library like jsqr
   // For now, we'll return a placeholder
   throw new Error('QR code reading not implemented yet')

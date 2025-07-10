@@ -263,13 +263,13 @@ The key import/export functionality requires:
 - `@noble/ed25519`: For Ed25519 key operations
 - `crypto`: For cryptographic operations (Node.js built-in)
 
-## Migration from ov-id-sdk
+## Migration from Legacy SDKs
 
-If you're migrating from the ov-id-sdk, the new functionality provides a more comprehensive and standardized approach:
+If you're migrating from legacy SDKs, the new functionality provides a more comprehensive and standardized approach:
 
 ```typescript
-// Old ov-id-sdk approach
-import { convertRecoveryToPrivateKey, convertPrivateKeyToRecovery } from 'ov-id-sdk';
+// Old legacy SDK approach
+import { convertRecoveryToPrivateKey, convertPrivateKeyToRecovery } from 'legacy-sdk';
 
 // New open-verifiable-id-sdk approach
 import { importKey, exportKey, convertKeyFormat } from '@/core/key-management';

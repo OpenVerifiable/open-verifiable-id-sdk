@@ -8,7 +8,7 @@
 import {
   VerifiableCredential_2_0,
   SecureStorage,
-  OvIdAgent,
+  OpenVerifiableAgent,
   CredentialTemplate,
   AccessLogEntry
 } from '../../types';
@@ -63,9 +63,9 @@ export interface CrossDeviceSyncData {
  */
 export class CredentialKeyManager {
   private storage: SecureStorage;
-  private agent?: OvIdAgent;
+  private agent?: OpenVerifiableAgent;
 
-  constructor(storage: SecureStorage, agent?: OvIdAgent) {
+  constructor(storage: SecureStorage, agent?: OpenVerifiableAgent) {
     this.storage = storage;
     this.agent = agent;
   }

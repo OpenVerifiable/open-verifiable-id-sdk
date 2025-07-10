@@ -7,8 +7,8 @@
  * @implements ADR-0007: Agent Architecture and Extensibility
  */
 
-import type { OVAgent, AgentType, AgentPlugin } from '../../types'
-import { AgentFactory, createAgent as factoryCreateAgent } from './factory'
+import type { OpenVerifiableAgent, AgentType, AgentPlugin } from '../../types/index.js'
+import { AgentFactory, createAgent as factoryCreateAgent } from './factory.js'
 
 export interface AgentClientOptions {
   /** Default agent type to create */
@@ -25,7 +25,7 @@ export interface AgentClientOptions {
  * Main agents client that provides unified agent management capabilities
  */
 export class AgentsClient {
-  private agents: Map<string, OVAgent> = new Map()
+  private agents: Map<string, OpenVerifiableAgent> = new Map()
   private options: AgentClientOptions
 
   constructor(options: AgentClientOptions = {}) {
@@ -40,27 +40,27 @@ export class AgentsClient {
   /**
    * Create a new agent
    */
-  async createAgent(type: AgentType, options?: any): Promise<OVAgent> {
+  async createAgent(type: AgentType, options?: any): Promise<OpenVerifiableAgent> {
     const agent = await factoryCreateAgent(type, {
       ...this.options,
       ...options
     })
     
-    this.agents.set(agent.agentId, agent)
-    return agent
+    this.agents.set(agent.agentId, agent as any)
+    return agent as any
   }
 
   /**
    * Get an existing agent by ID
    */
-  getAgent(agentId: string): OVAgent | undefined {
+  getAgent(agentId: string): OpenVerifiableAgent | undefined {
     return this.agents.get(agentId)
   }
 
   /**
    * List all managed agents
    */
-  listAgents(): OVAgent[] {
+  listAgents(): OpenVerifiableAgent[] {
     return Array.from(this.agents.values())
   }
 
@@ -97,6 +97,6 @@ export class AgentsClient {
 /**
  * Convenience factory function for backward compatibility
  */
-export function createAgent(type: AgentType, options?: any): Promise<OVAgent> {
+export function createAgent(type: AgentType, options?: any): Promise<OpenVerifiableAgent> {
   return createAgent(type, options)
 } 

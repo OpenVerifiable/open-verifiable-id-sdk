@@ -1,6 +1,6 @@
 ---
 ADR: 0014
-Title: ov-id-sdk Performance & Optimization Strategy
+Title: open-verifiable-id-sdk Performance & Optimization Strategy
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -21,7 +21,7 @@ Runbook: |
 
 ## Context
 
-The ov-id-sdk performs cryptographically intensive operations including key generation, digital signing, credential verification, and trust registry lookups. These operations must execute efficiently across platforms ranging from high-performance servers to resource-constrained mobile devices.
+The open-verifiable-id-sdk performs cryptographically intensive operations including key generation, digital signing, credential verification, and trust registry lookups. These operations must execute efficiently across platforms ranging from high-performance servers to resource-constrained mobile devices.
 
 Performance is critical for user experience, especially in real-time applications like authentication flows, content signing pipelines, and interactive credential presentations. Poor performance can lead to timeouts, battery drain on mobile devices, and user abandonment.
 
@@ -57,7 +57,7 @@ Current benchmarks indicate room for optimization in areas including cryptograph
 #### Lazy Loading and Code Splitting
 ```typescript
 // Modular architecture with dynamic imports
-export class OVAgent {
+export class OpenVerifiableAgent {
   private cryptoModule?: CryptoModule;
   private trustRegistryModule?: TrustRegistryModule;
   private biometricModule?: BiometricModule;

@@ -1,6 +1,6 @@
 ---
 ADR: 0004
-Title: ov-id-sdk Carbon Awareness Integration
+Title: open-verifiable-id-sdk Carbon Awareness Integration
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-ov-id-sdk needs to integrate carbon awareness to track and minimize the environmental impact of digital identity operations. This includes credential issuance, DID operations, and cryptographic computations. The solution must provide transparent carbon tracking while maintaining performance and user sovereignty.
+open-verifiable-id-sdk needs to integrate carbon awareness to track and minimize the environmental impact of digital identity operations. This includes credential issuance, DID operations, and cryptographic computations. The solution must provide transparent carbon tracking while maintaining performance and user sovereignty.
 
 ## Requirements
 
@@ -199,7 +199,7 @@ interface CarbonAwareScheduler {
 }
 ```
 
-### 5. Integration with ov-id-sdk
+### 5. Integration with open-verifiable-id-sdk
 
 #### Enhanced Credential Operations
 ```typescript

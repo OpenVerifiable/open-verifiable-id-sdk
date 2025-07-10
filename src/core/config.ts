@@ -43,6 +43,9 @@ export async function initializeSDK(config?: Partial<SDKConfiguration>): Promise
   // Store original config for validation
   const originalConfig = config || {};
 
+  // Validate user-provided configuration first
+  await validateUserConfiguration(originalConfig, detectedPlatform, platformCapabilities);
+
   // Merge provided config with defaults
   sdkConfig = {
     ...defaultConfig,
@@ -53,7 +56,7 @@ export async function initializeSDK(config?: Partial<SDKConfiguration>): Promise
   // Apply platform-specific configurations
   sdkConfig = applyPlatformDefaults(sdkConfig, detectedPlatform, platformCapabilities);
 
-  // Validate configuration with original config for user-provided values
+  // Final validation of complete configuration
   await validateConfiguration(sdkConfig, originalConfig);
 
   return sdkConfig;
@@ -70,6 +73,9 @@ export function getSDKConfiguration(): SDKConfiguration {
  * Update SDK configuration
  */
 export function updateSDKConfiguration(updates: Partial<SDKConfiguration>): SDKConfiguration {
+  // Validate updates before applying them
+  validateConfigurationUpdates(updates);
+  
   sdkConfig = {
     ...sdkConfig,
     ...updates
@@ -83,7 +89,7 @@ export function updateSDKConfiguration(updates: Partial<SDKConfiguration>): SDKC
 function applyPlatformDefaults(
   config: SDKConfiguration,
   platform: RuntimePlatform,
-  capabilities: any
+  _capabilities: any
 ): SDKConfiguration {
   const platformDefaults: Partial<SDKConfiguration> = {};
 
@@ -92,11 +98,11 @@ function applyPlatformDefaults(
       platformDefaults.security = {
         ...config.security,
         keyStorageType: 'file', // Browser uses file-based storage (localStorage mapped to file)
-        requireBiometric: capabilities.biometricSupport && config.security.requireBiometric
+        requireBiometric: _capabilities.biometricSupport && config.security.requireBiometric
       };
       platformDefaults.features = {
         ...config.features,
-        biometricAuth: capabilities.biometricSupport,
+        biometricAuth: _capabilities.biometricSupport,
         carbonAwareness: false, // Disabled by default in browser
         schemaRegistry: config.features.schemaRegistry ?? true,
         offlineCache: config.features.offlineCache ?? true,
@@ -108,11 +114,11 @@ function applyPlatformDefaults(
       platformDefaults.security = {
         ...config.security,
         keyStorageType: 'keychain',
-        requireBiometric: capabilities.biometricSupport
+        requireBiometric: _capabilities.biometricSupport
       };
       platformDefaults.features = {
         ...config.features,
-        biometricAuth: capabilities.biometricSupport,
+        biometricAuth: _capabilities.biometricSupport,
         carbonAwareness: true,
         schemaRegistry: config.features.schemaRegistry ?? true,
         offlineCache: config.features.offlineCache ?? true,
@@ -140,11 +146,11 @@ function applyPlatformDefaults(
       platformDefaults.security = {
         ...config.security,
         keyStorageType: 'hardware',
-        requireBiometric: capabilities.biometricSupport
+        requireBiometric: _capabilities.biometricSupport
       };
       platformDefaults.features = {
         ...config.features,
-        biometricAuth: capabilities.biometricSupport,
+        biometricAuth: _capabilities.biometricSupport,
         carbonAwareness: true,
         schemaRegistry: config.features.schemaRegistry ?? true,
         offlineCache: config.features.offlineCache ?? true,
@@ -164,41 +170,159 @@ function applyPlatformDefaults(
 }
 
 /**
+ * Validate user-provided configuration
+ */
+async function validateUserConfiguration(
+  userConfig: Partial<SDKConfiguration>, 
+  platform: RuntimePlatform, 
+  capabilities: any
+): Promise<void> {
+  const errors: string[] = [];
+
+  // Validate version format if provided
+  if (userConfig.version && !/^\d+\.\d+\.\d+/.test(userConfig.version)) {
+    errors.push('Invalid version format');
+  }
+
+  // Validate environment if provided
+  if (userConfig.environment && !['development', 'staging', 'production'].includes(userConfig.environment)) {
+    errors.push('Invalid environment');
+  }
+
+  // Validate security settings if provided
+  if (userConfig.security) {
+    if (userConfig.security.encryptionLevel && !['standard', 'high'].includes(userConfig.security.encryptionLevel)) {
+      errors.push('Invalid encryption level');
+    }
+    if (userConfig.security.keyStorageType && !['file', 'keychain', 'hardware'].includes(userConfig.security.keyStorageType)) {
+      errors.push('Invalid key storage type');
+    }
+  }
+
+  // Validate platform capabilities for user-provided settings
+  if (userConfig.features?.biometricAuth && !capabilities.biometricSupport) {
+    errors.push('Biometric authentication is not supported on this platform');
+  }
+
+  if (userConfig.security?.keyStorageType === 'hardware' && !capabilities.secureContext) {
+    errors.push('Hardware key storage requires a secure context');
+  }
+
+  // Validate endpoints if provided
+  if (userConfig.endpoints) {
+    for (const [key, endpoint] of Object.entries(userConfig.endpoints)) {
+      if (endpoint && !isValidURL(endpoint)) {
+        errors.push(`Invalid ${key} endpoint URL`);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
+  }
+}
+
+/**
+ * Validate configuration updates
+ */
+function validateConfigurationUpdates(updates: Partial<SDKConfiguration>): void {
+  const errors: string[] = [];
+
+  // Validate version format if provided
+  if (updates.version && !/^\d+\.\d+\.\d+/.test(updates.version)) {
+    errors.push('Invalid version format');
+  }
+
+  // Validate environment if provided
+  if (updates.environment && !['development', 'staging', 'production'].includes(updates.environment)) {
+    errors.push('Invalid environment');
+  }
+
+  // Validate security settings if provided
+  if (updates.security) {
+    if (updates.security.encryptionLevel && !['standard', 'high'].includes(updates.security.encryptionLevel)) {
+      errors.push('Invalid encryption level');
+    }
+    if (updates.security.keyStorageType && !['file', 'keychain', 'hardware'].includes(updates.security.keyStorageType)) {
+      errors.push('Invalid key storage type');
+    }
+  }
+
+  // Validate endpoints if provided
+  if (updates.endpoints) {
+    for (const [key, endpoint] of Object.entries(updates.endpoints)) {
+      if (endpoint && !isValidURL(endpoint)) {
+        errors.push(`Invalid ${key} endpoint URL`);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
+  }
+}
+
+/**
  * Validate SDK configuration
  */
 async function validateConfiguration(config: SDKConfiguration, originalConfig?: Partial<SDKConfiguration>): Promise<void> {
   const errors: string[] = [];
 
-  // Validate version format
-  if (!/^\d+\.\d+\.\d+/.test(config.version)) {
+  // Validate required fields
+  if (!config.version) {
+    errors.push('Version is required');
+  } else if (!/^\d+\.\d+\.\d+/.test(config.version)) {
     errors.push('Invalid version format');
   }
 
-  // Validate environment
-  if (!['development', 'staging', 'production'].includes(config.environment)) {
+  if (!config.environment) {
+    errors.push('Environment is required');
+  } else if (!['development', 'staging', 'production'].includes(config.environment)) {
     errors.push('Invalid environment');
   }
 
+  if (!config.platform) {
+    errors.push('Platform is required');
+  }
+
+  if (!config.features) {
+    errors.push('Features configuration is required');
+  }
+
+  if (!config.security) {
+    errors.push('Security configuration is required');
+  }
+
+  // Validate security settings
+  if (config.security) {
+    if (config.security.encryptionLevel && !['standard', 'high'].includes(config.security.encryptionLevel)) {
+      errors.push('Invalid encryption level');
+    }
+    if (config.security.keyStorageType && !['file', 'keychain', 'hardware'].includes(config.security.keyStorageType)) {
+      errors.push('Invalid key storage type');
+    }
+  }
+
   // Validate platform capabilities
-  const capabilities = RuntimePlatformDetector.getCapabilities(config.platform);
+  const _capabilities = RuntimePlatformDetector.getCapabilities(config.platform);
   
   // Check original config for user-provided biometric auth setting
   const userRequestedBiometric = originalConfig?.features?.biometricAuth;
-  if (userRequestedBiometric && !capabilities.biometricSupport) {
+  if (userRequestedBiometric && !_capabilities.biometricSupport) {
     errors.push('Biometric authentication is not supported');
   }
 
-  if (config.security.keyStorageType === 'hardware' && !capabilities.secureContext) {
+  if (config.security.keyStorageType === 'hardware' && !_capabilities.secureContext) {
     errors.push('Hardware key storage requires a secure context');
   }
 
   // Validate endpoints if provided
   if (config.endpoints) {
-          for (const [key, endpoint] of Object.entries(config.endpoints)) {
-        if (endpoint && !isValidURL(endpoint)) {
-          errors.push(`Invalid ${key} endpoint URL`);
-        }
+    for (const [key, endpoint] of Object.entries(config.endpoints)) {
+      if (endpoint && !isValidURL(endpoint)) {
+        errors.push(`Invalid ${key} endpoint URL`);
       }
+    }
   }
 
   if (errors.length > 0) {
@@ -233,25 +357,67 @@ function isValidURL(string: string): boolean {
 /**
  * Get platform-specific configuration recommendations
  */
-export function getConfigurationRecommendations(platform?: RuntimePlatform): Partial<SDKConfiguration> {
+export function getConfigurationRecommendations(platform?: RuntimePlatform): Array<{category: string, recommendation: string, priority: 'low' | 'medium' | 'high'}> {
   const targetPlatform = platform || RuntimePlatformDetector.detectRuntimePlatform();
-  const capabilities = RuntimePlatformDetector.getCapabilities(targetPlatform);
+  const _capabilities = RuntimePlatformDetector.getCapabilities(targetPlatform);
+  const recommendations: Array<{category: string, recommendation: string, priority: 'low' | 'medium' | 'high'}> = [];
 
-  const recommendations: Partial<SDKConfiguration> = {
-    platform: targetPlatform,
-    features: {
-      trustRegistry: true,
-      schemaRegistry: true,
-      carbonAwareness: targetPlatform === RuntimePlatform.BROWSER ? false : true,
-      biometricAuth: targetPlatform === RuntimePlatform.REACT_NATIVE ? true : capabilities.biometricSupport,
-      offlineCache: true
-    },
-    security: {
-      encryptionLevel: capabilities.secureContext ? 'high' : 'standard',
-      requireBiometric: capabilities.biometricSupport,
-      keyStorageType: getRecommendedKeyStorage(targetPlatform, capabilities)
-    }
-  };
+  // Platform-specific recommendations
+  if (targetPlatform === RuntimePlatform.BROWSER) {
+    recommendations.push({
+      category: 'Security',
+      recommendation: 'Use file-based key storage for browser compatibility',
+      priority: 'high'
+    });
+    recommendations.push({
+      category: 'Features',
+      recommendation: 'Disable carbon awareness for better browser performance',
+      priority: 'medium'
+    });
+  }
+
+  if (targetPlatform === RuntimePlatform.REACT_NATIVE) {
+    recommendations.push({
+      category: 'Security',
+      recommendation: 'Enable biometric authentication for enhanced security',
+      priority: 'high'
+    });
+    recommendations.push({
+      category: 'Storage',
+      recommendation: 'Use keychain storage for secure key management',
+      priority: 'high'
+    });
+  }
+
+  if (targetPlatform === RuntimePlatform.NODE) {
+    recommendations.push({
+      category: 'Security',
+      recommendation: 'Use high encryption level for server environments',
+      priority: 'high'
+    });
+    recommendations.push({
+      category: 'Features',
+      recommendation: 'Enable carbon awareness for environmental monitoring',
+      priority: 'medium'
+    });
+  }
+
+  // Capability-based recommendations
+  if (_capabilities.biometricSupport) {
+    recommendations.push({
+      category: 'Security',
+      recommendation: 'Consider enabling biometric authentication',
+      priority: 'medium'
+    });
+  }
+
+  if (_capabilities.secureContext) {
+    recommendations.push({
+      category: 'Security',
+      recommendation: 'Use hardware-backed key storage when available',
+      priority: 'high'
+    });
+  }
 
   return recommendations;
 }
@@ -259,7 +425,7 @@ export function getConfigurationRecommendations(platform?: RuntimePlatform): Par
 /**
  * Get recommended key storage type for platform
  */
-function getRecommendedKeyStorage(platform: RuntimePlatform, capabilities: any): 'file' | 'keychain' | 'hardware' {
+function getRecommendedKeyStorage(platform: RuntimePlatform, _capabilities: any): 'file' | 'keychain' | 'hardware' {
   if (platform === RuntimePlatform.REACT_NATIVE) {
     return 'keychain';
   }

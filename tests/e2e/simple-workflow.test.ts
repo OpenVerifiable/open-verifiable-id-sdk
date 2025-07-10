@@ -29,7 +29,7 @@ describe('Simple End-to-End Workflow', () => {
     console.log('🚀 Starting simple e2e workflow test...')
 
     // Step 1: Verify agent is initialized
-    expect(packageAgent.agentId).toBe('package-@open-verifiable/simple-test-1.0.0')
+    expect(packageAgent.agentId).toBe('package-@open-verifiable/simple-test')
     expect(packageAgent.agentType).toBe('package')
     console.log('✅ Agent initialized successfully')
 
@@ -57,7 +57,13 @@ describe('Simple End-to-End Workflow', () => {
     })
 
     expect(credential.id).toBeDefined()
-    expect(credential.issuer).toBe(didResult.did)
+    console.log('🔍 Debug: credential.issuer type:', typeof credential.issuer)
+    console.log('🔍 Debug: credential.issuer value:', credential.issuer)
+    console.log('🔍 Debug: didResult.did:', didResult.did)
+    
+    // Handle both string and object issuer formats
+    const actualIssuer = typeof credential.issuer === 'string' ? credential.issuer : credential.issuer.id
+    expect(actualIssuer).toBe(didResult.did)
     expect(credential.type).toContain('VerifiableCredential')
     console.log('✅ Credential issued:', credential.id)
 

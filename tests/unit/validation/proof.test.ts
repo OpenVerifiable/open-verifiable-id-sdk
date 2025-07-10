@@ -35,14 +35,12 @@ describe('Proof Validation', () => {
   };
 
   // Mock resolver
-  const mockResolver: Resolver = {
+  const mockResolver: any = {
     resolve: vi.fn().mockResolvedValue({
       didDocument: mockDidDocument,
       didResolutionMetadata: {},
       didDocumentMetadata: {}
-    }),
-    registry: {},
-    cache: new Map()
+    })
   };
 
   // Test credential with JWT proof
@@ -76,6 +74,15 @@ describe('Proof Validation', () => {
       proofValue: 'mockProofValue'
     } as DataIntegrityProofType
   };
+
+  beforeEach(() => {
+    // Reset the resolver mock to default successful behavior before each test
+    mockResolver.resolve = vi.fn().mockResolvedValue({
+      didDocument: mockDidDocument,
+      didResolutionMetadata: {},
+      didDocumentMetadata: {}
+    });
+  });
 
   test('validates JWT proof successfully', async () => {
     (verifyJWS as jest.Mock).mockResolvedValue(true);
@@ -122,7 +129,7 @@ describe('Proof Validation', () => {
         verificationMethod: 'did:example:issuer#key-1',
         proofPurpose: ProofPurpose.ASSERTION
       }
-    };
+    } as unknown as VerifiableCredential_2_0;
 
     await expect(validateProof(
       credentialWithUnsupportedProof,
@@ -135,10 +142,10 @@ describe('Proof Validation', () => {
     const credentialWithInvalidMethod = {
       ...credentialWithJwt,
       proof: {
-        ...credentialWithJwt.proof,
+        ...(credentialWithJwt.proof as JwtProof),
         verificationMethod: 'did:example:issuer#invalid-key'
-      }
-    };
+      } as JwtProof
+    } as VerifiableCredential_2_0;
 
     await expect(validateProof(
       credentialWithInvalidMethod,

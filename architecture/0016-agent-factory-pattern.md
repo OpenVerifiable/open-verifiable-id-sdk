@@ -58,8 +58,8 @@ export class AgentFactory {
     type: AgentType, 
     agentId?: string,
     config?: any
-  ): Promise<OVAgent> {
-    let agent: OVAgent;
+  ): Promise<OpenVerifiableAgent> {
+    let agent: OpenVerifiableAgent;
 
     // Create agent instance based on type
     switch (type) {

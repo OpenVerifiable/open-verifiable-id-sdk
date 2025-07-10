@@ -1,6 +1,6 @@
 ---
 ADR: 0005
-Title: ov-id-sdk Offline Credential Caching and Sync
+Title: open-verifiable-id-sdk Offline Credential Caching and Sync
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-Many creators and users operate in environments with intermittent or no internet connectivity. ov-id-sdk must provide robust offline support for credential and DID operations, including caching, local storage, and eventual synchronization. This ensures users retain access to their credentials and can perform critical operations even when offline.
+Many creators and users operate in environments with intermittent or no internet connectivity. open-verifiable-id-sdk must provide robust offline support for credential and DID operations, including caching, local storage, and eventual synchronization. This ensures users retain access to their credentials and can perform critical operations even when offline.
 
 ## Requirements
 
@@ -146,7 +146,7 @@ interface CacheStatus {
 
 ## Business Impact
 - **Required for MVP**: Ensures SDK is usable in all environments
-- **Competitive Advantage**: Offline-first design differentiates ov-id-sdk
+- **Competitive Advantage**: Offline-first design differentiates open-verifiable-id-sdk
 - **User Trust**: Reliable access to credentials builds user trust and adoption
 
 ## Mission Alignment & Principle Coverage

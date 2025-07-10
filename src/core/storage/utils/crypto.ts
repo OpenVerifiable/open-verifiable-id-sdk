@@ -44,7 +44,7 @@ export class CryptoUtils {
     
     const key = crypto.pbkdf2Sync(password, salt, this.ITERATIONS, this.KEY_SIZE, 'sha256');
     const cipher = crypto.createCipheriv(this.ALGORITHM, key, iv);
-    cipher.setAAD(Buffer.from('ov-id-sdk', 'utf8'));
+    cipher.setAAD(Buffer.from('open-verifiable-id-sdk', 'utf8'));
     
     let encrypted = cipher.update(data, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -72,7 +72,7 @@ export class CryptoUtils {
     
     const key = crypto.pbkdf2Sync(password, salt, encryptedData.iterations, encryptedData.keySize / 8, 'sha256');
     const decipher = crypto.createDecipheriv(this.ALGORITHM, key, iv);
-    decipher.setAAD(Buffer.from('ov-id-sdk', 'utf8'));
+    decipher.setAAD(Buffer.from('open-verifiable-id-sdk', 'utf8'));
     
     // Extract auth tag (last 16 bytes)
     const authTag = encrypted.slice(-16);
