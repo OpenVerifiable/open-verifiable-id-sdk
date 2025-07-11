@@ -1,6 +1,6 @@
 ---
 ADR: 0011
-Title: ov-id-sdk LLM Development Integration & Resources
+Title: open-verifiable-id-sdk LLM Development Integration & Resources
 Date: 2025-01-14
 Status: Proposed
 Priority: Enhancement
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-Large Language Models (LLMs) are increasingly used for software development, code generation, and documentation assistance. The ov-id-sdk can be significantly improved for LLM-assisted development by providing structured, machine-readable resources and following LLM-friendly patterns.
+Large Language Models (LLMs) are increasingly used for software development, code generation, and documentation assistance. The open-verifiable-id-sdk can be significantly improved for LLM-assisted development by providing structured, machine-readable resources and following LLM-friendly patterns.
 
 Current gaps include:
 - Limited JSDoc documentation and type annotations
@@ -30,7 +30,7 @@ Current gaps include:
 
 ## Decision
 
-We will enhance ov-id-sdk to be highly LLM-friendly through comprehensive documentation, structured resources, and standardized patterns.
+We will enhance open-verifiable-id-sdk to be highly LLM-friendly through comprehensive documentation, structured resources, and standardized patterns.
 
 ### 1. Enhanced Type Definitions & Documentation
 
@@ -88,7 +88,7 @@ export interface CreateDIDProps {
   /** DID method identifier (e.g., 'cheqd', 'key', 'cheqd:testnet') */
   method: string;
   /** Optional Veramo agent instance. Uses parentAgent if not provided */
-  agent?: IOVAgent;
+  agent?: IOpenVerifiableAgent;
   /** Optional custom DID string. Auto-generated UUID-based if not provided */
   alias?: string;
   /** Whether to set this DID as the primary signing identity */
@@ -119,7 +119,7 @@ export interface CreateDIDResult {
 **SDK Specification (`docs/llm-resources/sdk-specification.json`):**
 ```json
 {
-  "name": "@originvault/ov-id-sdk",
+  "name": "@openverifiable/open-verifiable-id-sdk",
   "version": "0.0.18",
   "description": "TypeScript SDK for decentralized identity management and verifiable credentials",
   "type": "module",
@@ -187,7 +187,7 @@ export interface CreateDIDResult {
 `basic-usage.ts`:
 ```typescript
 /**
- * Basic ov-id-sdk usage examples
+ * Basic open-verifiable-id-sdk usage examples
  * These examples demonstrate the most common SDK operations
  */
 
@@ -197,7 +197,7 @@ import {
   verifyVC, 
   userStore,
   setPrimaryDID 
-} from '@originvault/ov-id-sdk';
+} from '@openverifiable/open-verifiable-id-sdk';
 
 // Example 1: Complete new user flow
 async function newUserFlow() {
@@ -259,7 +259,7 @@ export async function createDID(props: CreateDIDProps): Promise<CreateDIDResult>
 `generate-integration.js`:
 ```javascript
 /**
- * Generates integration code for common ov-id-sdk use cases
+ * Generates integration code for common open-verifiable-id-sdk use cases
  */
 export function generateIntegration(type, options) {
   const templates = {

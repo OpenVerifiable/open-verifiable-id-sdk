@@ -7,9 +7,9 @@
  * @implements ADR-0018: Storage Core Architecture
  */
 
-import type { SecureStorage } from '../../types'
-import { InMemoryStorage } from './memory'
-import { SecureStorageImpl } from './secure-storage'
+import type { SecureStorage } from '../../types/index.js'
+import { InMemoryStorage } from './memory.js'
+import { SecureStorageImpl } from './secure-storage.js'
 
 export interface StorageClientOptions {
   /** Encryption key for secure storage */

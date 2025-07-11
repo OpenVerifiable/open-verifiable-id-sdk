@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DIDLinkedResource",
+  "description": "Schema for DID-linked resources (DLRs) published or managed by the Open Verifiable ID SDK",
+  "type": "object",
+  "required": ["resourceId", "did", "name", "type", "resourceUrl", "createdAt", "visibility"],
+  "properties": {
+    "resourceId": {
+      "type": "string",
+      "description": "Unique identifier for the resource",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+    },
+    "did": {
+      "type": "string",
+      "description": "DID that owns or published the resource",
+      "pattern": "^did:[a-z]+:[a-zA-Z0-9._-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable resource name",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "type": {
+      "type": "string",
+      "description": "Resource type (e.g., schema, credential, file, etc.)",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "version": {
+      "type": "string",
+      "description": "Resource version (optional)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9._-]+)?(\\+[a-zA-Z0-9._-]+)?$"
+    },
+    "resourceUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Resolvable URL for the resource"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Resource creation timestamp"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Resource last update timestamp"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "private", "shared"],
+      "description": "Resource visibility: public (anyone can access), private (only owner DID), or shared (owner and sharedWith DIDs)"
+    },
+    "sharedWith": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^did:[a-z]+:[a-zA-Z0-9._-]+$" },
+      "description": "List of DIDs that can access this resource if visibility is shared"
+    }
+  },
+  "additionalProperties": false
+} 

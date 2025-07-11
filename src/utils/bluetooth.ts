@@ -120,7 +120,7 @@ export class BluetoothManager {
         }
 
         const service = await server.getPrimaryService(DEFAULT_SERVICE_UUID)
-        const characteristic = await service.getCharacteristic(DEFAULT_CHARACTERISTIC_UUID)
+        await service.getCharacteristic(DEFAULT_CHARACTERISTIC_UUID)
 
         const connection: BluetoothConnection = {
           device: {

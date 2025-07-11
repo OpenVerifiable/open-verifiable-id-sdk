@@ -131,6 +131,46 @@ const verificationResult = await packageAgent.verifyCredential(credential);
 console.log('Credential valid:', verificationResult.isValid);
 ```
 
+### Package Signing
+
+The SDK includes package signing functionality that allows packages to sign and publish themselves with their own DID, including universal credential creation:
+
+```typescript
+import { createPackageSignerFromConfig } from '@open-verifiable/id-sdk';
+
+// Create a package signer (reads package.json automatically)
+const packageSigner = await createPackageSignerFromConfig('./package.json');
+
+// Get package metadata
+const metadata = await packageSigner.getPackageMetadata();
+
+// Sign the package with universal credential
+const result = await packageSigner.signPackage({
+  version: metadata.version,
+  packageDID: metadata.did,
+  createUniversalCredential: true,
+  publishToDLR: true,
+  publishToNPM: false // Set to true to publish to npm
+});
+
+if (result.success) {
+  console.log('✅ Package signed successfully!');
+  console.log('Universal credential:', result.universalCredential?.id);
+}
+
+// Verify the package signature
+const verification = await packageSigner.verifyPackage({
+  version: metadata.version,
+  packageDID: metadata.did,
+  verifyUniversalCredential: true,
+  verifyDLRPublication: true
+});
+
+console.log('Package verification:', verification.isValid);
+```
+
+**Note**: CLI commands are provided by the separate `@open-verifiable/id-cli` package.
+
 ### End-to-End Workflows
 
 The SDK includes comprehensive e2e workflow tests demonstrating real-world usage:
@@ -161,24 +201,24 @@ import { runStorageWorkflow } from '@open-verifiable/id-sdk/examples';
 await runStorageWorkflow();
 ```
 
-### Migration from ov-id-sdk
+### Migration from Legacy SDKs
 
 The SDK provides backward compatibility during the transition:
 
 ```typescript
-// Legacy ov-id-sdk functions will be supported
+// Legacy SDK functions will be supported
 import { 
   createDID,    // ✅ Backward compatible
   signVC,       // ✅ Backward compatible  
   verifyVC      // ✅ Backward compatible
-} from '@open-verifiable/id-sdk';
+} from '@openverifiable/open-verifiable-id-sdk';
 
 // New SDK features
 import { 
   TrustRegistryClient,
   CarbonAwareClient,
   BiometricAuthenticator
-} from '@open-verifiable/id-sdk';
+} from '@openverifiable/open-verifiable-id-sdk';
 ```
 
 ## 🧪 Testing
@@ -341,13 +381,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Open Verifiable Community**: For governance and standards development
 - **W3C Credentials Community Group**: For W3C VC 2.0 specifications
 - **DIF (Decentralized Identity Foundation)**: For interoperability standards
-- **OriginVault Team**: For the original ov-id-sdk implementation
+- **OriginVault Team**: For the original implementation inspiration
 
 ## 🔗 Related Projects
 
 - **[Open Verifiable Schema Registry](https://github.com/open-verifiable/open-verifiable-schema-registry)**: Schema definitions and type generation
 - **[Open Verifiable Architecture Decision Records](https://github.com/open-verifiable/open-verifiable-architecture-decision-records)**: Governance and technical decisions
-- **[ov-id-sdk](https://github.com/OriginVault/ov-id-sdk)**: Original implementation and migration source
+- **[Legacy SDK](https://github.com/OriginVault/ov-id-sdk)**: Original implementation reference
 
 ---
 

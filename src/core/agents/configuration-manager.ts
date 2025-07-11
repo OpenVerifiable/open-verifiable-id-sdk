@@ -19,9 +19,11 @@ import {
   AgentPluginConfig,
   AgentSecurityConfig,
   AgentFeaturesConfig,
-  AgentEndpointsConfig
-} from './types';
-import { AgentType } from '../../types';
+  AgentEndpointsConfig,
+  PluginSecurityConfig,
+  PluginLifecycleConfig
+} from './types.js';
+import { AgentType } from '../../types/index.js';
 
 /**
  * Default agent configuration templates
@@ -314,6 +316,56 @@ export class AgentConfigurationManager {
     const warnings: string[] = [];
     const suggestions: string[] = [];
 
+    // Validate required fields
+    if (!config.agentId) errors.push('agentId is required');
+    if (!config.agentType) errors.push('agentType is required');
+
+    // Validate plugins
+    if (config.plugins) {
+      // Check for duplicate plugin names
+      const pluginNames = config.plugins.map(p => p.name);
+      const duplicates = pluginNames.filter((name, idx) => pluginNames.indexOf(name) !== idx);
+      if (duplicates.length > 0) {
+        errors.push(`Duplicate plugin names: ${[...new Set(duplicates)].join(', ')}`);
+      }
+      // Validate each plugin config
+      for (const plugin of config.plugins) {
+        // Validate per-plugin security settings
+        if (plugin.security) {
+          if (plugin.security.sandboxed && config.security?.sandboxMode === false) {
+            errors.push(`Plugin '${plugin.name}' requires sandboxed execution but agent sandboxMode is false.`);
+          }
+          // Example: only allow certain permissions
+          const allowedPermissions = ['read', 'write', 'sign', 'verify', 'network'];
+          if (plugin.security.permissions) {
+            const invalid = plugin.security.permissions.filter(p => !allowedPermissions.includes(p));
+            if (invalid.length > 0) {
+              errors.push(`Plugin '${plugin.name}' requests invalid permissions: ${invalid.join(', ')}`);
+            }
+          }
+        }
+        // Validate per-plugin lifecycle settings
+        if (plugin.lifecycle) {
+          if (plugin.lifecycle.lazyLoad && plugin.lifecycle.autoEnable) {
+            warnings.push(`Plugin '${plugin.name}' is set to both lazyLoad and autoEnable; autoEnable will be ignored.`);
+          }
+        }
+      }
+      // Validate plugin dependencies
+      for (const plugin of config.plugins) {
+        if (plugin.config?.dependencies) {
+          for (const dep of plugin.config.dependencies) {
+            const found = config.plugins.find(p => p.name === dep.name);
+            if (!found) {
+              errors.push(`Plugin '${plugin.name}' requires missing dependency '${dep.name}'.`);
+            } else if (dep.version && found.version !== dep.version) {
+              errors.push(`Plugin '${plugin.name}' requires '${dep.name}' version '${dep.version}', found '${found.version}'.`);
+            }
+          }
+        }
+      }
+    }
+
     try {
       // Validate against JSON schema using the correct function name
       validateWithSchema('agent-configuration.schema.json', config);
@@ -434,7 +486,7 @@ export class AgentConfigurationManager {
       timestamp: new Date().toISOString(),
       configurations: configsToExport,
       metadata: {
-        source: 'ov-id-sdk',
+        source: 'open-verifiable-id-sdk',
         description: `Exported ${configsToExport.length} agent configurations`,
         tags: ['export', 'agent-configuration']
       }

@@ -100,9 +100,9 @@ interface DIDCreationResult {
 export class DIDManagerImpl implements DIDManager {
   private storage: SecureStorage;
   private platform: Platform;
-  private agent?: OVAgent; // Optional agent reference
+  private agent?: OpenVerifiableAgent; // Optional agent reference
 
-  constructor(storage: SecureStorage, agent?: OVAgent) {
+  constructor(storage: SecureStorage, agent?: OpenVerifiableAgent) {
     this.storage = storage;
     this.platform = PlatformDetector.detectPlatform();
     this.agent = agent;

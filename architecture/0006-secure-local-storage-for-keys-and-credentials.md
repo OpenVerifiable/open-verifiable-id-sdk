@@ -1,6 +1,6 @@
 ---
 ADR: 0006
-Title: ov-id-sdk Secure Local Storage for Keys and Credentials
+Title: open-verifiable-id-sdk Secure Local Storage for Keys and Credentials
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-Private keys and verifiable credentials are highly sensitive assets. ov-id-sdk must provide robust, user-friendly, and secure local storage for these assets, ensuring they are protected from unauthorized access, loss, or compromise. This is foundational for user sovereignty, privacy, and trust.
+Private keys and verifiable credentials are highly sensitive assets. open-verifiable-id-sdk must provide robust, user-friendly, and secure local storage for these assets, ensuring they are protected from unauthorized access, loss, or compromise. This is foundational for user sovereignty, privacy, and trust.
 
 ## Requirements
 
@@ -143,7 +143,7 @@ interface AccessLogEntry {
 ## Business Impact
 - **Required for MVP**: Secure storage is foundational for any identity SDK
 - **User Adoption**: Security and privacy are key drivers for adoption
-- **Competitive Advantage**: Transparent, user-controlled security differentiates ov-id-sdk
+- **Competitive Advantage**: Transparent, user-controlled security differentiates open-verifiable-id-sdk
 
 ## Mission Alignment & Principle Coverage
 - **Creator First, Always**: Protects creators' assets and privacy

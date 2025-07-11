@@ -31,7 +31,12 @@ export async function validateProof(
       ? credential.issuer 
       : credential.issuer.id;
     
-    const didResolution = await resolver.resolve(issuerDid);
+    let didResolution;
+    try {
+      didResolution = await resolver.resolve(issuerDid);
+    } catch (error) {
+      throw new Error('Failed to resolve issuer DID');
+    }
     
     if (!didResolution.didDocument) {
       throw new Error('Failed to resolve issuer DID');
@@ -61,6 +66,7 @@ export async function validateProof(
 
   } catch (error) {
     if (error instanceof Error) {
+      // Preserve the original error message
       throw error;
     }
     throw new Error(`Proof validation failed: ${error}`);

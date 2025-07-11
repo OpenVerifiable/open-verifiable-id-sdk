@@ -3,14 +3,13 @@
  * Provides core functionality that all agent types extend
  */
 
-import { createAgent } from '@veramo/core';
+import { createAgent, TAgent } from '@veramo/core';
 import { getUniversalResolverFor } from '@veramo/did-resolver';
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
-import { MessageHandler } from '@veramo/message-handler';
-import { DIDCommMessageHandler, DIDComm } from '@veramo/did-comm';
+// import { MessageHandler } from '@veramo/message-handler';
+// import { DIDCommMessageHandler, DIDComm } from '@veramo/did-comm';
 import { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } from '@veramo/key-manager';
-import { CredentialPlugin, W3cMessageHandler } from '@veramo/credential-w3c';
-import { extractPublicKeyHex } from '@veramo/utils';
+import { CredentialPlugin } from '@veramo/credential-w3c';
 // import {
 //   CredentialIssuerLD,
 //   LdDefaultContexts,
@@ -21,13 +20,23 @@ import { extractPublicKeyHex } from '@veramo/utils';
 import { KeyManagementSystem } from '@veramo/kms-local';
 import { DIDResolverPlugin } from '@veramo/did-resolver';
 import { KeyDIDProvider } from '@veramo/did-provider-key';
-import { CheqdDIDProvider, CheqdDidResolver } from '@cheqd/did-provider-cheqd';
+import { CheqdDIDProvider } from '@cheqd/did-provider-cheqd';
 import { Resolver } from 'did-resolver';
 import dotenv from 'dotenv';
-import { DataSource } from 'typeorm';
+// import { DataSource } from 'typeorm';
 import { KeyStore } from '@veramo/data-store';
+import { 
+  IDIDManager, 
+  IKeyManager, 
+  ICredentialIssuer, 
+  ICredentialVerifier, 
+  ICredentialPlugin, 
+  IDataStore, 
+  IResolver 
+} from '@veramo/core-types';
+import { ICheqd } from '@cheqd/did-provider-cheqd';
+import { extractPublicKeyHex } from '@veramo/utils';
 import {
-  OVAgent,
   AgentType,
   AgentPlugin,
   CreateDIDOptions,
@@ -37,20 +46,34 @@ import {
   IIdentifier,
   RuntimePlatform,
   SecureStorage,
-  OvIdAgent,
+  OpenVerifiableAgent,
   ValidationResult,
   AgentContext,
   TrustStatusInfo,
   TrustStatus,
   KeyManager as SDKKeyManager
 } from '../../types';
+
+// Define VeramoAgent type locally
+type VeramoAgent = TAgent<
+  IKeyManager & 
+  IDIDManager & 
+  ICredentialIssuer & 
+  ICredentialVerifier & 
+  ICredentialPlugin & 
+  IDataStore & 
+  ICheqd & 
+  IResolver
+>;
 import { createSecureStorage } from '../storage';
 import { SecureStorageImpl } from '../storage/secure-storage';
-import { DIDManagerImpl, createDIDManager } from '../did';
+
 import { DIDDocument } from 'did-resolver';
-import { validateCredential } from '../validation';
 import { createKeyManager } from '../key-management';
+import { importKey, KeyImportExportFormat } from '../key-management/key-import-export';
 import crypto from 'crypto';
+import { dlrClient, DIDLinkedResourceClient } from '@/core/utils/dlr'
+import { CreateResourceParams, ResourceMetadata, UpdateResourceParams, ResourceListResult } from '@/core/resource/types'
 
 dotenv.config();
 
@@ -84,7 +107,7 @@ export function createCheqdProvider(networkType: CheqdNetwork, cosmosPayerSeed: 
  * Base Agent Implementation using Veramo
  * Provides core functionality that all agent types extend
  */
-export abstract class BaseAgent implements OvIdAgent {
+export abstract class BaseAgent implements OpenVerifiableAgent {
   readonly id: string;
   readonly agentId: string;
   readonly agentType: AgentType;
@@ -92,9 +115,40 @@ export abstract class BaseAgent implements OvIdAgent {
   public keyManager: SDKKeyManager;
   public encryptionKey?: string;
 
-  protected agent?: any; // Veramo agent instance
+  // Internal Veramo agent instance
+  private _veramoAgent?: TAgent<
+    IKeyManager & 
+    IDIDManager & 
+    ICredentialIssuer & 
+    ICredentialVerifier & 
+    ICredentialPlugin & 
+    IDataStore & 
+    ICheqd & 
+    IResolver
+  >;
   protected plugins: Map<string, AgentPlugin> = new Map();
-  protected customDIDManager!: DIDManagerImpl;
+  protected dlr: DIDLinkedResourceClient = dlrClient;
+  
+  
+  // Public accessor for the internal Veramo agent
+  public get agent() {
+    return this._veramoAgent;
+  }
+
+  // Public accessor for Veramo agent (alternative name for backward compatibility)
+  public get veramoAgent() {
+    return this._veramoAgent;
+  }
+
+  // Debug method to inspect agent structure
+  public getAgentDebugInfo() {
+    return {
+      agentPresent: !!this._veramoAgent,
+      agentKeys: this._veramoAgent ? Object.keys(this._veramoAgent) : [],
+      pluginsPresent: !!this._veramoAgent?.plugins,
+      pluginKeys: this._veramoAgent?.plugins ? Object.keys(this._veramoAgent.plugins) : []
+    };
+  }
 
   constructor(id: string, agentType: AgentType, encryptionKey?: string) {
     this.id = id;
@@ -145,21 +199,38 @@ export abstract class BaseAgent implements OvIdAgent {
       };
 
       // Issue the credential using Veramo
-      const result = await this.agent.createVerifiableCredential({
-        credential,
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+      
+      // Ensure the issuer is a string (DID)
+      const issuerDid = typeof credential.issuer === 'string' ? credential.issuer : credential.issuer.id;
+      
+      const result = await this._veramoAgent.createVerifiableCredential({
+        credential: {
+          ...credential,
+          issuer: issuerDid
+        },
         proofFormat: 'jwt'
       });
 
       // Convert Veramo result to our VerifiableCredential format
       if (result.credential) {
+        // Ensure issuer is always a string, not an object
+        const finalIssuer = typeof result.credential.issuer === 'string' 
+          ? result.credential.issuer 
+          : (result.credential.issuer as any)?.id || issuerDid;
+        
         return {
           ...result.credential,
+          issuer: finalIssuer, // Ensure issuer is always a string
           proof: result.proof || { jwt: result.jwt || 'generated-proof' }
         };
       } else {
         // Handle case where Veramo returns just the JWT
         return {
           ...credential,
+          issuer: issuerDid, // Ensure issuer is always a string
           proof: { 
             type: 'JsonWebSignature2020',
             jwt: result.jwt || result 
@@ -194,7 +265,10 @@ export abstract class BaseAgent implements OvIdAgent {
    */
   async createDID(method: string, options?: CreateDIDOptions): Promise<IIdentifier> {
     try {
-      const result = await this.agent.didManagerCreate({
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+      const result = await this._veramoAgent.didManagerCreate({
         provider: `did:${method}`,
         alias: options?.alias,
         options: options
@@ -210,57 +284,105 @@ export abstract class BaseAgent implements OvIdAgent {
       
       // Create a proper IIdentifier structure
       const identifier: IIdentifier = {
+        ...result,
         did: result.did,
         provider: `did:${method}`,
         alias: options?.alias || `${method}-${Date.now()}`,
         keys: result.keys || [],
         services: result.services || [],
-        controllerKeyId: keyId,
-        // Add any additional properties that might be expected
-        ...result
+        controllerKeyId: keyId
       };
 
       return identifier;
     } catch (err) {
-      const error = err as Error;
-      throw new Error(`Failed to create DID: ${error.message}`);
+      // Handle different types of errors (Error objects, strings, undefined, etc.)
+      let errorMessage: string;
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err === undefined || err === null) {
+        errorMessage = 'undefined';
+      } else {
+        errorMessage = String(err);
+      }
+      throw new Error(`Failed to create DID: ${errorMessage}`);
     }
   }
 
-  async verifyCredential(credential: VerifiableCredential): Promise<ValidationResult> {
+  async importDID(did: string, privateKey: string, method: string, alias?: string): Promise<boolean> {
     try {
-      // Use Veramo's built-in verification directly, just like cheqd-studio does
-      const result = await this.agent.verifyCredential({
-        credential,
-        policies: {
-          credentialStatus: false, // Disable status checking for now
-        }
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+
+      // Import the private key first
+      const keyImportResult = await importKey(privateKey, {
+        format: KeyImportExportFormat.HEX,
+        algorithm: 'Ed25519' as any
       });
 
-      // Convert Veramo result to our ValidationResult format
-      return {
-        isValid: result.verified,
-        validationErrors: result.error ? [result.error.message || 'Verification failed'] : [],
-        warnings: [],
-        trustStatus: {
-          status: result.verified ? TrustStatus.TRUSTED : TrustStatus.UNTRUSTED,
-          lastChecked: new Date().toISOString(),
-          source: 'veramo-verification'
-        }
-      };
+      // Create the keys array for import
+      const keysToImport = [{
+        type: 'Ed25519' as const,
+        privateKeyHex: Buffer.from(keyImportResult.privateKey).toString('hex'),
+        kms: 'local'
+      }];
 
+      // Extract the DID method from the DID string
+      const didMethod = did.split(':')[1];
+      const provider = `did:${didMethod}`;
+
+      // Import the DID into the agent's DID manager
+      await this._veramoAgent.didManagerImport({
+        did,
+        keys: keysToImport,
+        alias: alias || `imported-${Date.now()}`,
+        provider: provider
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to import DID:', error);
+      return false;
+    }
+  }
+
+  async verifyCredentialWithValidation(credential: VerifiableCredential): Promise<ValidationResult> {
+    try {
+      // Validate credential structure first
+      if (!this.validateCredentialStructure(credential)) {
+        return {
+          isValid: false,
+          validationErrors: ['Invalid credential structure'],
+          warnings: []
+        };
+      }
+
+      // Check if credential has a proof
+      if (!credential.proof) {
+        return {
+          isValid: false,
+          validationErrors: ['Credential has no proof'],
+          warnings: []
+        };
+      }
+
+      // Handle different proof types
+      if ('jwt' in credential.proof) {
+        return await this.verifyJWTCredential(credential.proof.jwt);
+      } else if (credential.proof.type === 'DataIntegrityProof') {
+        return await this.customVerifyCredential(credential);
+      } else {
+        return {
+          isValid: false,
+          validationErrors: [`Unsupported proof type: ${(credential.proof as any).type}`],
+          warnings: []
+        };
+      }
     } catch (error) {
       const err = error as Error;
-      return {
-        isValid: false,
-        validationErrors: [err.message || 'Verification failed'],
-        warnings: [],
-        trustStatus: {
-          status: TrustStatus.UNTRUSTED,
-          lastChecked: new Date().toISOString(),
-          source: 'veramo-verification-error'
-        }
-      };
+      throw new Error(`Credential verification failed: ${err.message}`);
     }
   }
 
@@ -299,7 +421,10 @@ export abstract class BaseAgent implements OvIdAgent {
       const issuer = typeof credential.issuer === 'string' ? credential.issuer : credential.issuer.id;
       console.log('Resolving DID for verification:', issuer);
       
-      const didResolution = await this.agent.resolveDid({ didUrl: issuer });
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+      const didResolution = await this._veramoAgent.resolveDid({ didUrl: issuer });
       if (!didResolution.didDocument) {
         return {
           isValid: false,
@@ -409,7 +534,10 @@ export abstract class BaseAgent implements OvIdAgent {
       // Resolve the DID to get the public key
       console.log('Resolving DID for JWT verification:', issuer);
       
-      const didResolution = await this.agent.resolveDid({ didUrl: issuer });
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+      const didResolution = await this._veramoAgent.resolveDid({ didUrl: issuer });
       if (!didResolution.didDocument) {
         return {
           isValid: false,
@@ -614,8 +742,11 @@ export abstract class BaseAgent implements OvIdAgent {
    * Lifecycle methods
    */
   async initialize(): Promise<void> {
+    // Check if we're in test mode
+    const isTestMode = process.env.NODE_ENV === 'test' || process.env.DISABLE_NETWORK === 'true';
+    
     // minimal Veramo agent with key, did, credential plugins
-    this.agent = createAgent({
+    this._veramoAgent = createAgent({
       plugins: [
         new KeyManager({
           store: keyStore,
@@ -626,15 +757,15 @@ export abstract class BaseAgent implements OvIdAgent {
           defaultProvider: 'did:key',
           providers: {
             'did:key': new KeyDIDProvider({ defaultKms: 'local' }),
-            // Add Cheqd providers if environment variables are available
-            ...(process.env.CHEQD_TESTNET_RPC_URL && process.env.CHEQD_PAYER_SEED ? {
+            // Add Cheqd providers only if not in test mode and environment variables are available
+            ...(!isTestMode && process.env.CHEQD_TESTNET_RPC_URL && process.env.CHEQD_PAYER_SEED ? {
               'did:cheqd:testnet': createCheqdProvider(
                 CheqdNetwork.Testnet,
                 process.env.CHEQD_PAYER_SEED,
                 process.env.CHEQD_TESTNET_RPC_URL
               )
             } : {}),
-            ...(process.env.CHEQD_MAINNET_RPC_URL && process.env.CHEQD_PAYER_SEED ? {
+            ...(!isTestMode && process.env.CHEQD_MAINNET_RPC_URL && process.env.CHEQD_PAYER_SEED ? {
               'did:cheqd:mainnet': createCheqdProvider(
                 CheqdNetwork.Mainnet,
                 process.env.CHEQD_PAYER_SEED,
@@ -659,21 +790,19 @@ export abstract class BaseAgent implements OvIdAgent {
         // })
       ]
     });
-
-    this.customDIDManager = createDIDManager(this.secureStorage as any) as unknown as DIDManagerImpl;
   }
 
   async cleanup(): Promise<void> {
     // Clean up resources
     await this.destroy();
     await this.secureStorage.clear();
-    this.agent = null;
+    this._veramoAgent = undefined;
   }
 
   async destroy(): Promise<void> {
     for (const plugin of Array.from(this.plugins.values())) {
       if (plugin.unregister) {
-        plugin.unregister(this);
+        plugin.unregister(this as any);
       }
     }
     this.plugins.clear();
@@ -687,7 +816,7 @@ export abstract class BaseAgent implements OvIdAgent {
       throw new Error(`Plugin with name '${plugin.name}' is already registered`);
     }
     this.plugins.set(plugin.name, plugin);
-    plugin.register(this);
+    plugin.register(this as any);
   }
 
   getPlugin(name: string): AgentPlugin | undefined {
@@ -701,7 +830,7 @@ export abstract class BaseAgent implements OvIdAgent {
   clearPlugins(): void {
     for (const plugin of Array.from(this.plugins.values())) {
       if (plugin.unregister) {
-        plugin.unregister(this);
+        plugin.unregister(this as any);
       }
     }
     this.plugins.clear();
@@ -711,25 +840,7 @@ export abstract class BaseAgent implements OvIdAgent {
     return crypto.randomBytes(16).toString('hex');
   }
 
-  /**
-   * Enhanced DID operations using both Veramo and custom DID manager
-   */
-  async createDIDWithCustomManager(method: string, options?: CreateDIDOptions): Promise<any> {
-    // Use custom DID manager for enhanced functionality
-    return await this.customDIDManager.createDID(method, {
-      alias: options?.alias
-    });
-  }
 
-  async resolveDIDWithCustomManager(did: string): Promise<any> {
-    // Use custom DID manager for enhanced resolution
-    return await this.customDIDManager.resolveDID(did);
-  }
-
-  async signWithDIDUsingCustomManager(did: string, data: Uint8Array): Promise<any> {
-    // Use custom DID manager for enhanced signing
-    return await this.customDIDManager.signWithDID(did, data);
-  }
 
   /**
    * Enhanced storage operations
@@ -755,7 +866,10 @@ export abstract class BaseAgent implements OvIdAgent {
 
   async sign(data: any, options?: any): Promise<any> {
     try {
-      return await this.agent.keyManagerSign({
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+      return await this._veramoAgent.keyManagerSign({
         data,
         keyRef: options?.keyRef,
         algorithm: options?.algorithm || 'EdDSA'
@@ -768,14 +882,78 @@ export abstract class BaseAgent implements OvIdAgent {
 
   async resolveDID(did: string): Promise<DIDDocument> {
     try {
-      return await this.agent.resolveDid({ didUrl: did });
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+      const result = await this._veramoAgent.resolveDid({ didUrl: did });
+      if (!result.didDocument) {
+        throw new Error('DID document not found');
+      }
+      return result.didDocument as DIDDocument;
     } catch (err) {
       const error = err as Error;
       throw new Error(`Failed to resolve DID: ${error.message}`);
     }
   }
 
+  async verifyCredential(credential: any): Promise<ValidationResult> {
+    try {
+      if (!this._veramoAgent) {
+        throw new Error('Agent not initialized');
+      }
+
+      // Use Veramo's built-in credential verification
+      const result = await this._veramoAgent.verifyCredential({
+        credential: credential
+      });
+
+      return {
+        isValid: result.verified,
+        validationErrors: result.error?.message ? [result.error.message] : [],
+        warnings: []
+      };
+    } catch (error) {
+      const err = error as Error;
+      // If it's an "Agent not initialized" error, throw it instead of returning ValidationResult
+      if (err.message === 'Agent not initialized') {
+        throw err;
+      }
+      return {
+        isValid: false,
+        validationErrors: [err.message],
+        warnings: []
+      };
+    }
+  }
+
   protected findPluginByType(type: string): AgentPlugin | undefined {
     return Array.from(this.plugins.values()).find(p => p.type === type);
+  }
+
+  /**
+   * Publish a DID-linked resource owned by this agent.
+   */
+  async publishResource(params: Omit<CreateResourceParams, 'did'>): Promise<ResourceMetadata> {
+    return this.dlr.createResource({ ...params, did: this.agentId })
+  }
+
+  /** Retrieve a resource owned by this agent (access-control enforced). */
+  async getResource(resourceId: string): Promise<ResourceMetadata | null> {
+    return this.dlr.getResource(this.agentId, resourceId)
+  }
+
+  /** Update an existing resource the agent owns. */
+  async updateResource(resourceId: string, updates: UpdateResourceParams): Promise<ResourceMetadata> {
+    return this.dlr.updateResource(this.agentId, resourceId, updates)
+  }
+
+  /** Delete an owned resource. */
+  async deleteResource(resourceId: string): Promise<boolean> {
+    return this.dlr.deleteResource(this.agentId, resourceId)
+  }
+
+  /** List resources owned by this agent. */
+  async listResources(options?: { limit?: number; offset?: number }): Promise<ResourceListResult> {
+    return this.dlr.listResources(this.agentId, options)
   }
 } 

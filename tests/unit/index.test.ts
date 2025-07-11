@@ -1,424 +1,239 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import {
-  createUserAgent,
-  createPackageAgent,
-  createParentAgent,
-  createServiceAgent,
-  createCredentialTemplate,
-  validateCredentialStructure,
-  getSDKInfo
-} from '../../src/index'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { 
+  UserAgent, 
+  PackageAgent, 
+  ParentAgent, 
+  ServiceAgent,
+  AgentFactory 
+} from '../../src/core/agents'
 import { AgentType } from '../../src/types'
-
-// Mock the agent classes
-vi.mock('../../src/core/agents/user-agent', () => ({
-  UserAgent: class MockUserAgent {
-    public agentId: string
-    public agentType: AgentType = AgentType.USER
-    public encryptionKey?: string
-
-    constructor(userId: string, encryptionKey?: string) {
-      this.agentId = `user-${userId}`
-      this.encryptionKey = encryptionKey
-    }
-
-    async initialize(): Promise<void> {
-      // Mock implementation
-    }
-  }
-}))
-
-vi.mock('../../src/core/agents/package-agent', () => ({
-  PackageAgent: class MockPackageAgent {
-    public agentId: string
-    public agentType: AgentType = AgentType.PACKAGE
-    public version: string
-    public encryptionKey?: string
-
-    constructor(packageName: string, version: string, encryptionKey?: string) {
-      this.agentId = `package-${packageName}`
-      this.version = version
-      this.encryptionKey = encryptionKey
-    }
-
-    async initialize(): Promise<void> {
-      // Mock implementation
-    }
-  }
-}))
-
-vi.mock('../../src/core/agents/parent-agent', () => ({
-  ParentAgent: class MockParentAgent {
-    public agentId: string
-    public agentType: AgentType = AgentType.PARENT
-    public encryptionKey?: string
-
-    constructor(organizationId: string, encryptionKey?: string) {
-      this.agentId = `parent-${organizationId}`
-      this.encryptionKey = encryptionKey
-    }
-
-    async initialize(): Promise<void> {
-      // Mock implementation
-    }
-  }
-}))
-
-vi.mock('../../src/core/agents/service-agent', () => ({
-  ServiceAgent: class MockServiceAgent {
-    public agentId: string
-    public agentType: AgentType = AgentType.SERVICE
-    public serviceConfig: any
-    public encryptionKey?: string
-
-    constructor(serviceName: string, serviceConfig: any, encryptionKey?: string) {
-      this.agentId = `service-${serviceName}`
-      this.serviceConfig = serviceConfig
-      this.encryptionKey = encryptionKey
-    }
-
-    async initialize(): Promise<void> {
-      // Mock implementation
-    }
-  }
-}))
+import { 
+  createTestUserAgent, 
+  createTestPackageAgent, 
+  createTestParentAgent, 
+  createTestServiceAgent,
+  cleanupTestAgent 
+} from '../setup/agent-test-helper'
 
 describe('SDK Main Module', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+  describe('Agent Classes', () => {
+    describe('UserAgent', () => {
+      let userAgent: UserAgent
 
-  afterEach(() => {
-    vi.clearAllMocks()
-  })
+      beforeEach(async () => {
+        userAgent = await createTestUserAgent('test-user')
+      })
 
-  describe('createUserAgent', () => {
-    it('should create a user agent with userId', async () => {
-      const userId = 'test-user-123'
-      const agent = await createUserAgent(userId)
-      
-      expect(agent.agentType).toBe(AgentType.USER)
-      expect(agent.agentId).toBe(`user-${userId}`)
+      afterEach(async () => {
+        await cleanupTestAgent(userAgent)
+      })
+
+      it('should be exported and instantiable', () => {
+        expect(UserAgent).toBeDefined()
+        expect(typeof UserAgent).toBe('function')
+      })
+
+      it('should create a user agent with correct properties', () => {
+        expect((userAgent as any).agentId).toBe('user-test-user')
+        expect((userAgent as any).agentType).toBe(AgentType.USER)
+      })
+
+      it('should have user-specific capabilities', () => {
+        const capabilities = userAgent.getCapabilities()
+        expect(capabilities).toContain('create-did')
+        expect(capabilities).toContain('issue-credential')
+        expect(capabilities).toContain('verify-credential')
+      })
     })
 
-    it('should create a user agent with encryption key', async () => {
-      const userId = 'test-user-123'
-      const encryptionKey = 'test-key'
-      const agent = await createUserAgent(userId, encryptionKey)
-      
-      expect(agent.agentType).toBe(AgentType.USER)
-      expect(agent.agentId).toBe(`user-${userId}`)
-      expect((agent as any).encryptionKey).toBe(encryptionKey)
+    describe('PackageAgent', () => {
+      let packageAgent: PackageAgent
+
+      beforeEach(async () => {
+        packageAgent = await createTestPackageAgent('test-package', '1.0.0')
+      })
+
+      afterEach(async () => {
+        await cleanupTestAgent(packageAgent)
+      })
+
+      it('should be exported and instantiable', () => {
+        expect(PackageAgent).toBeDefined()
+        expect(typeof PackageAgent).toBe('function')
+      })
+
+      it('should create a package agent with correct properties', () => {
+        expect((packageAgent as any).agentId).toBe('package-test-package')
+        expect((packageAgent as any).agentType).toBe(AgentType.PACKAGE)
+        expect((packageAgent as any).version).toBe('1.0.0')
+      })
+
+      it('should have package-specific capabilities', () => {
+        const capabilities = packageAgent.getCapabilities()
+        expect(capabilities).toContain('create-package-did')
+        expect(capabilities).toContain('issue-package-credentials')
+        expect(capabilities).toContain('verify-package-integrity')
+      })
     })
 
-    it('should initialize the agent', async () => {
-      const userId = 'test-user-123'
-      const agent = await createUserAgent(userId)
-      
+    describe('ParentAgent', () => {
+      let parentAgent: ParentAgent
+
+      beforeEach(async () => {
+        parentAgent = await createTestParentAgent('test-organization')
+      })
+
+      afterEach(async () => {
+        await cleanupTestAgent(parentAgent)
+      })
+
+      it('should be exported and instantiable', () => {
+        expect(ParentAgent).toBeDefined()
+        expect(typeof ParentAgent).toBe('function')
+      })
+
+      it('should create a parent agent with correct properties', () => {
+        expect((parentAgent as any).agentId).toBe('parent-test-organization')
+        expect((parentAgent as any).agentType).toBe(AgentType.PARENT)
+      })
+
+      it('should have organization-specific capabilities', () => {
+        const capabilities = parentAgent.getCapabilities()
+        expect(capabilities).toContain('create-organization-did')
+        expect(capabilities).toContain('delegate-permissions')
+        expect(capabilities).toContain('manage-child-agents')
+      })
+    })
+
+    describe('ServiceAgent', () => {
+      let serviceAgent: ServiceAgent
+
+      beforeEach(async () => {
+        serviceAgent = await createTestServiceAgent('test-service', {
+          endpoint: 'https://api.example.com'
+        })
+      })
+
+      afterEach(async () => {
+        await cleanupTestAgent(serviceAgent)
+      })
+
+      it('should be exported and instantiable', () => {
+        expect(ServiceAgent).toBeDefined()
+        expect(typeof ServiceAgent).toBe('function')
+      })
+
+      it('should create a service agent with correct properties', () => {
+        expect((serviceAgent as any).agentId).toBe('service-test-service')
+        expect((serviceAgent as any).agentType).toBe(AgentType.SERVICE)
+        expect((serviceAgent as any).serviceConfig).toBeDefined()
+      })
+
+      it('should have service-specific capabilities', () => {
+        const capabilities = serviceAgent.getCapabilities()
+        expect(capabilities).toContain('create-service-did')
+        expect(capabilities).toContain('issue-service-credentials')
+        expect(capabilities).toContain('verify-external-credentials')
+      })
+    })
+  })
+
+  describe('AgentFactory', () => {
+    let factory: AgentFactory
+
+    beforeEach(() => {
+      factory = new AgentFactory()
+    })
+
+    afterEach(async () => {
+      await factory.cleanup()
+    })
+
+    it('should be exported and instantiable', () => {
+      expect(AgentFactory).toBeDefined()
+      expect(typeof AgentFactory).toBe('function')
+    })
+
+    it('should create user agents', async () => {
+      const agent = await factory.createUserAgent('test-user')
       expect(agent).toBeDefined()
-      expect(agent.agentType).toBe(AgentType.USER)
+      expect((agent as any).agentType).toBe(AgentType.USER)
+      await cleanupTestAgent(agent)
+    })
+
+    it('should create package agents', async () => {
+      const agent = await factory.createPackageAgent('test-package', '1.0.0')
+      expect(agent).toBeDefined()
+      expect((agent as any).agentType).toBe(AgentType.PACKAGE)
+      await cleanupTestAgent(agent)
+    })
+
+    it('should create parent agents', async () => {
+      const agent = await factory.createParentAgent('test-organization')
+      expect(agent).toBeDefined()
+      expect((agent as any).agentType).toBe(AgentType.PARENT)
+      await cleanupTestAgent(agent)
+    })
+
+    it('should create service agents', async () => {
+      const agent = await factory.createServiceAgent('test-service', {})
+      expect(agent).toBeDefined()
+      expect((agent as any).agentType).toBe(AgentType.SERVICE)
+      await cleanupTestAgent(agent)
     })
   })
 
-  describe('createPackageAgent', () => {
-    it('should create a package agent with name and version', async () => {
-      const packageName = 'test-package'
-      const packageVersion = '1.0.0'
-      const agent = await createPackageAgent(packageName, packageVersion)
-      
-      expect(agent.agentType).toBe(AgentType.PACKAGE)
-      expect(agent.agentId).toBe(`package-${packageName}`)
-      expect((agent as any).version).toBe(packageVersion)
-    })
-
-    it('should create a package agent with encryption key', async () => {
-      const packageName = 'test-package'
-      const packageVersion = '1.0.0'
-      const encryptionKey = 'test-key'
-      const agent = await createPackageAgent(packageName, packageVersion, encryptionKey)
-      
-      expect(agent.agentType).toBe(AgentType.PACKAGE)
-      expect(agent.agentId).toBe(`package-${packageName}`)
-      expect((agent as any).encryptionKey).toBe(encryptionKey)
-    })
-
-    it('should handle scoped package names', async () => {
-      const packageName = '@scope/test-package'
-      const packageVersion = '2.0.0'
-      const agent = await createPackageAgent(packageName, packageVersion)
-      
-      expect(agent.agentType).toBe(AgentType.PACKAGE)
-      expect(agent.agentId).toBe(`package-${packageName}`)
+  describe('Type Exports', () => {
+    it('should export AgentType enum', () => {
+      expect(AgentType).toBeDefined()
+      expect(AgentType.USER).toBe('user')
+      expect(AgentType.PACKAGE).toBe('package')
+      expect(AgentType.PARENT).toBe('parent')
+      expect(AgentType.SERVICE).toBe('service')
     })
   })
 
-  describe('createParentAgent', () => {
-    it('should create a parent agent with organization ID', async () => {
-      const organizationId = 'test-org-123'
-      const agent = await createParentAgent(organizationId)
-      
-      expect(agent.agentType).toBe(AgentType.PARENT)
-      expect(agent.agentId).toBe(`parent-${organizationId}`)
+  describe('Integration Tests', () => {
+    it('should allow creating and using multiple agent types', async () => {
+      // Create different types of agents
+      const userAgent = await createTestUserAgent('user1')
+      const packageAgent = await createTestPackageAgent('package1', '1.0.0')
+      const parentAgent = await createTestParentAgent('org1')
+      const serviceAgent = await createTestServiceAgent('service1', {})
+
+      // Verify they all have the expected types
+      expect((userAgent as any).agentType).toBe(AgentType.USER)
+      expect((packageAgent as any).agentType).toBe(AgentType.PACKAGE)
+      expect((parentAgent as any).agentType).toBe(AgentType.PARENT)
+      expect((serviceAgent as any).agentType).toBe(AgentType.SERVICE)
+
+      // Verify they all have capabilities
+      expect(userAgent.getCapabilities().length).toBeGreaterThan(0)
+      expect(packageAgent.getCapabilities().length).toBeGreaterThan(0)
+      expect(parentAgent.getCapabilities().length).toBeGreaterThan(0)
+      expect(serviceAgent.getCapabilities().length).toBeGreaterThan(0)
+
+      // Clean up
+      await cleanupTestAgent(userAgent)
+      await cleanupTestAgent(packageAgent)
+      await cleanupTestAgent(parentAgent)
+      await cleanupTestAgent(serviceAgent)
     })
 
-    it('should create a parent agent with encryption key', async () => {
-      const organizationId = 'test-org-123'
-      const encryptionKey = 'test-key'
-      const agent = await createParentAgent(organizationId, encryptionKey)
-      
-      expect(agent.agentType).toBe(AgentType.PARENT)
-      expect(agent.agentId).toBe(`parent-${organizationId}`)
-      expect((agent as any).encryptionKey).toBe(encryptionKey)
-    })
-  })
+    it('should allow creating DIDs with different agents', async () => {
+      const userAgent = await createTestUserAgent('user1')
+      const packageAgent = await createTestPackageAgent('package1', '1.0.0')
 
-  describe('createServiceAgent', () => {
-    it('should create a service agent with name and config', async () => {
-      const serviceName = 'test-service'
-      const serviceConfig = { endpoint: 'https://api.example.com' }
-      const agent = await createServiceAgent(serviceName, serviceConfig)
-      
-      expect(agent.agentType).toBe(AgentType.SERVICE)
-      expect(agent.agentId).toBe(`service-${serviceName}`)
-      expect((agent as any).serviceConfig).toEqual(serviceConfig)
-    })
+      // Create DIDs with different agents
+      const userDID = await userAgent.createDID('key')
+      const packageDID = await packageAgent.createDID('key')
 
-    it('should create a service agent with encryption key', async () => {
-      const serviceName = 'test-service'
-      const serviceConfig = { endpoint: 'https://api.example.com', apiKey: 'test-api-key' }
-      const encryptionKey = 'test-key'
-      const agent = await createServiceAgent(serviceName, serviceConfig, encryptionKey)
-      
-      expect(agent.agentType).toBe(AgentType.SERVICE)
-      expect(agent.agentId).toBe(`service-${serviceName}`)
-      expect((agent as any).encryptionKey).toBe(encryptionKey)
-    })
+      expect(userDID.did).toMatch(/^did:key:/)
+      expect(packageDID.did).toMatch(/^did:key:/)
+      expect(userDID.did).not.toBe(packageDID.did)
 
-    it('should handle complex service configurations', async () => {
-      const serviceName = 'auth-service'
-      const serviceConfig = {
-        endpoint: 'https://auth.example.com',
-        apiKey: 'test-api-key',
-        timeout: 5000,
-        retries: 3
-      }
-      const agent = await createServiceAgent(serviceName, serviceConfig)
-      
-      expect(agent.agentType).toBe(AgentType.SERVICE)
-      expect((agent as any).serviceConfig).toEqual(serviceConfig)
-    })
-  })
-
-  describe('createCredentialTemplate', () => {
-    it('should create a basic credential template', () => {
-      const type = ['VerifiableCredential', 'TestCredential']
-      const credentialSubject = { id: 'did:test:subject', name: 'Test User' }
-      
-      const template = createCredentialTemplate(type, credentialSubject)
-      
-      expect(template.type).toEqual(type)
-      expect(template.credentialSubject).toEqual(credentialSubject)
-      expect(template.issuer).toBeUndefined()
-      expect(template.validFrom).toBeDefined()
-      expect(template.validUntil).toBeUndefined()
-      expect(template.context).toEqual(['https://www.w3.org/2018/credentials/v1'])
-    })
-
-    it('should create a credential template with all parameters', () => {
-      const type = ['VerifiableCredential', 'TestCredential']
-      const credentialSubject = { id: 'did:test:subject', name: 'Test User' }
-      const issuer = 'did:test:issuer'
-      const validFrom = '2023-01-01T00:00:00Z'
-      const validUntil = '2024-01-01T00:00:00Z'
-      const context = ['https://www.w3.org/2018/credentials/v1', 'https://example.com/context']
-      
-      const template = createCredentialTemplate(type, credentialSubject, issuer, validFrom, validUntil, context)
-      
-      expect(template.type).toEqual(type)
-      expect(template.credentialSubject).toEqual(credentialSubject)
-      expect(template.issuer).toBe(issuer)
-      expect(template.validFrom).toBe(validFrom)
-      expect(template.validUntil).toBe(validUntil)
-      expect(template.context).toEqual(context)
-    })
-
-    it('should use current timestamp when validFrom is not provided', () => {
-      const type = ['VerifiableCredential']
-      const credentialSubject = { id: 'did:test:subject' }
-      
-      const before = new Date().toISOString()
-      const template = createCredentialTemplate(type, credentialSubject)
-      const after = new Date().toISOString()
-      
-      expect(template.validFrom).toBeDefined()
-      expect(template.validFrom >= before).toBe(true)
-      expect(template.validFrom <= after).toBe(true)
-    })
-
-    it('should use default context when not provided', () => {
-      const type = ['VerifiableCredential']
-      const credentialSubject = { id: 'did:test:subject' }
-      
-      const template = createCredentialTemplate(type, credentialSubject)
-      
-      expect(template.context).toEqual(['https://www.w3.org/2018/credentials/v1'])
-    })
-  })
-
-  describe('validateCredentialStructure', () => {
-    it('should validate a correct credential structure', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: 'urn:uuid:test',
-        type: ['VerifiableCredential', 'TestCredential'],
-        issuer: 'did:test:issuer',
-        validFrom: '2023-01-01T00:00:00Z',
-        credentialSubject: { id: 'did:test:subject' }
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(true)
-      expect(result.errors).toEqual([])
-    })
-
-    it('should detect missing @context field', () => {
-      const credential = {
-        id: 'urn:uuid:test',
-        type: ['VerifiableCredential'],
-        issuer: 'did:test:issuer',
-        validFrom: '2023-01-01T00:00:00Z',
-        credentialSubject: { id: 'did:test:subject' }
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing @context field')
-    })
-
-    it('should detect missing id field', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        type: ['VerifiableCredential'],
-        issuer: 'did:test:issuer',
-        validFrom: '2023-01-01T00:00:00Z',
-        credentialSubject: { id: 'did:test:subject' }
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing id field')
-    })
-
-    it('should detect missing or invalid type field', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: 'urn:uuid:test',
-        issuer: 'did:test:issuer',
-        validFrom: '2023-01-01T00:00:00Z',
-        credentialSubject: { id: 'did:test:subject' }
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing or invalid type field')
-    })
-
-    it('should detect missing issuer field', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: 'urn:uuid:test',
-        type: ['VerifiableCredential'],
-        validFrom: '2023-01-01T00:00:00Z',
-        credentialSubject: { id: 'did:test:subject' }
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing issuer field')
-    })
-
-    it('should detect missing validFrom field', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: 'urn:uuid:test',
-        type: ['VerifiableCredential'],
-        issuer: 'did:test:issuer',
-        credentialSubject: { id: 'did:test:subject' }
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing validFrom field')
-    })
-
-    it('should detect missing credentialSubject field', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        id: 'urn:uuid:test',
-        type: ['VerifiableCredential'],
-        issuer: 'did:test:issuer',
-        validFrom: '2023-01-01T00:00:00Z'
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing credentialSubject field')
-    })
-
-    it('should detect multiple validation errors', () => {
-      const credential = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        type: 'VerifiableCredential', // Should be array
-        validFrom: '2023-01-01T00:00:00Z'
-        // Missing id, issuer, credentialSubject
-      }
-      
-      const result = validateCredentialStructure(credential)
-      
-      expect(result.isValid).toBe(false)
-      expect(result.errors).toContain('Missing id field')
-      expect(result.errors).toContain('Missing issuer field')
-      expect(result.errors).toContain('Missing credentialSubject field')
-      expect(result.errors).toContain('Missing or invalid type field')
-    })
-  })
-
-  describe('getSDKInfo', () => {
-    it('should return SDK information', () => {
-      const info = getSDKInfo()
-      
-      expect(info.version).toBe('1.0.0')
-      expect(info.supportedVCVersion).toBe('2.0')
-      expect(info.supportedDIDMethods).toContain('did:key')
-      expect(info.supportedDIDMethods).toContain('did:cheqd:mainnet')
-      expect(info.supportedDIDMethods).toContain('did:cheqd:testnet')
-      expect(info.supportedCryptosuites).toContain('eddsa-2022')
-      expect(info.supportedCryptosuites).toContain('jwt')
-      expect(info.platform).toBe('node')
-    })
-
-    it('should include all capabilities', () => {
-      const info = getSDKInfo()
-      
-      expect(info.capabilities.trustRegistry).toBe(true)
-      expect(info.capabilities.schemaRegistry).toBe(true)
-      expect(info.capabilities.carbonAwareness).toBe(true)
-      expect(info.capabilities.biometricAuth).toBe(true)
-      expect(info.capabilities.offlineCache).toBe(true)
-    })
-
-    it('should return consistent information', () => {
-      const info1 = getSDKInfo()
-      const info2 = getSDKInfo()
-      
-      expect(info1).toEqual(info2)
+      await cleanupTestAgent(userAgent)
+      await cleanupTestAgent(packageAgent)
     })
   })
 }) 

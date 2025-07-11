@@ -4,7 +4,7 @@
  * Based on ADR-0007: Agent Architecture and Extensibility
  */
 
-import { BaseAgent } from './base';
+import { BaseAgent } from './base.js';
 import {
   IIdentifier,
   VerifiableCredential,

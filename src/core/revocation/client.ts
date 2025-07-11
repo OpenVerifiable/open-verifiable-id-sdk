@@ -354,9 +354,9 @@ export const defaultRevocationList: RevocationList = {
   issuerDID: 'local',
   revokedCredentials: [],
   metadata: {
-    name: 'ov-id-sdk Default Revocation List',
-    description: 'Default revocation list for ov-id-sdk',
-    source: 'ov-id-sdk',
+          name: 'open-verifiable-id-sdk Default Revocation List',
+      description: 'Default revocation list for open-verifiable-id-sdk',
+      source: 'open-verifiable-id-sdk',
     maintainer: 'OriginVault'
   }
 }; 

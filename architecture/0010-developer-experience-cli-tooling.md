@@ -1,6 +1,6 @@
 ---
 ADR: 0010
-Title: ov-id-sdk Developer Experience & CLI Tooling
+Title: open-verifiable-id-sdk Developer Experience & CLI Tooling
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-Developer experience is critical for SDK adoption and community growth. The ov-id-sdk handles complex identity operations that can be challenging for developers to implement correctly. A comprehensive CLI tool and excellent developer experience reduces barriers to entry, enables rapid prototyping, and encourages proper implementation patterns.
+Developer experience is critical for SDK adoption and community growth. The open-verifiable-id-sdk handles complex identity operations that can be challenging for developers to implement correctly. A comprehensive CLI tool and excellent developer experience reduces barriers to entry, enables rapid prototyping, and encourages proper implementation patterns.
 
 ## Requirements
 
@@ -249,7 +249,7 @@ const templates: ProjectTemplate[] = [
       { path: 'src/config.ts', template: 'config.ts.hbs' },
       { path: 'examples/create-did.ts', template: 'create-did.ts.hbs' }
     ],
-    dependencies: ['@originvault/ov-id-sdk'],
+    dependencies: ['@openverifiable/open-verifiable-id-sdk'],
     scripts: {
       'dev': 'ts-node src/index.ts',
       'build': 'tsc',
@@ -347,7 +347,7 @@ interface ExampleCommand {
 class CodeGenerator {
   async generateDIDManager(options: GenerationOptions): Promise<string> {
     return `
-import { DIDManager } from '@originvault/ov-id-sdk';
+import { DIDManager } from '@openverifiable/open-verifiable-id-sdk';
 
 export class Custom${options.className} extends DIDManager {
   constructor() {

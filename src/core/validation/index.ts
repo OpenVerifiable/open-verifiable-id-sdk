@@ -16,8 +16,8 @@
 // Re-export the main client class
 export { ValidationClient, validateCredential } from './client'
 
-// Export CredentialValidator as an alias for ValidationClient for backward compatibility
-export { ValidationClient as CredentialValidator } from './client'
+// Export the legacy CredentialValidator class
+export { CredentialValidator } from './credential-validator'
 
 // Re-export public types and interfaces
 export type { ValidationClientOptions } from './client'

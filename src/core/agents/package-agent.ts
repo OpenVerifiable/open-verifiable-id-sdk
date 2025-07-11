@@ -4,7 +4,7 @@
  * Based on ADR-0007: Agent Architecture and Extensibility
  */
 
-import { BaseAgent } from './base';
+import { BaseAgent } from './base.js';
 import {
   IIdentifier,
   VerifiableCredential,
@@ -14,6 +14,7 @@ import {
   AgentType,
   TrustStatus
 } from '../../types';
+import { ResourceVisibility } from '@/core/resource/types'
 
 export interface PackageMetadata {
   name: string;
@@ -53,7 +54,7 @@ export class PackageAgent extends BaseAgent {
 
   constructor(config: PackageAgentConfig) {
     super(
-      `package-${config.packageName}-${config.packageVersion}`,
+      `package-${config.packageName}`,
       AgentType.PACKAGE,
       undefined
     );
@@ -70,6 +71,9 @@ export class PackageAgent extends BaseAgent {
   async issueCredential(template: CredentialTemplate): Promise<VerifiableCredential> {
     try {
       // Use the real Veramo credential issuance with JWT format
+      if (!this.agent) {
+        throw new Error('Agent not initialized');
+      }
       const credential = await this.agent.createVerifiableCredential({
         credential: {
           '@context': template['@context'] || ['https://www.w3.org/ns/credentials/v2'],
@@ -88,7 +92,11 @@ export class PackageAgent extends BaseAgent {
         fetchRemoteContexts: true
       });
 
-      return credential;
+      // Cast to our VerifiableCredential type which includes validFrom
+      return {
+        ...credential,
+        validFrom: template.validFrom || new Date().toISOString()
+      } as unknown as VerifiableCredential;
     } catch (error) {
       const err = error as Error;
       throw new Error(`Failed to issue credential: ${err.message}`);
@@ -136,10 +144,81 @@ export class PackageAgent extends BaseAgent {
         }
       };
 
-      return await this.issueCredential(releaseCredential);
+      const credential = await this.issueCredential(releaseCredential);
+      
+      // Publish the release signature as a DLR
+      await this.publishReleaseSignature(credential, metadata);
+      
+      return credential;
     } catch (err) {
       const error = err as Error;
       throw new Error(`Failed to sign release: ${error.message}`);
+    }
+  }
+
+  /**
+   * Publish release signature as a DID-linked resource
+   */
+  async publishReleaseSignature(credential: VerifiableCredential, metadata: PackageMetadata): Promise<void> {
+    try {
+      await this.publishResource({
+        type: 'package-release-signature',
+        name: `${this.packageName}-${this.packageVersion}-signature`,
+        data: {
+          credential,
+          metadata,
+          packageDID: this.packageDID,
+          signedAt: new Date().toISOString()
+        },
+        visibility: ResourceVisibility.PUBLIC,
+        metadata: {
+          description: `Release signature for ${this.packageName}@${this.packageVersion}`,
+          tags: ['package', 'release', 'signature', 'npm']
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to publish release signature as DLR:', error);
+      // Don't fail the signing process if DLR publishing fails
+    }
+  }
+
+  /**
+   * Publish package metadata as a DID-linked resource
+   */
+  async publishPackageMetadata(metadata: PackageMetadata): Promise<void> {
+    try {
+      await this.publishResource({
+        type: 'package-metadata',
+        name: `${this.packageName}-metadata`,
+        data: {
+          ...metadata,
+          packageDID: this.packageDID,
+          publishedAt: new Date().toISOString()
+        },
+        visibility: ResourceVisibility.PUBLIC,
+        metadata: {
+          description: `Package metadata for ${this.packageName}`,
+          tags: ['package', 'metadata', 'npm']
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to publish package metadata as DLR:', error);
+    }
+  }
+
+  /**
+   * Get all published signatures for this package
+   */
+  async getPublishedSignatures(): Promise<any[]> {
+    try {
+      const result = await this.listResources();
+      return result.resources.filter(resource => 
+        resource.type === 'package-release-signature' && 
+        resource.metadata?.metadata?.name === this.packageName
+      );
+    } catch (error) {
+      console.warn('Failed to retrieve published signatures:', error);
+      return [];
     }
   }
 
@@ -243,7 +322,9 @@ export class PackageAgent extends BaseAgent {
   getCapabilities(): string[] {
     return [
       'create-package-did',
+      'issue-package-credentials',
       'sign-package-metadata',
+      'verify-package-integrity',
       'verify-package-signatures',
       'manage-release-credentials'
     ];

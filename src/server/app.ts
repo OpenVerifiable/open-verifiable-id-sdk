@@ -3,7 +3,7 @@ import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { generateQRCode } from '../utils/qr-code.js'
-import { createBluetoothServer } from './bluetooth-server.js'
+// import { createBluetoothServer } from './bluetooth-server.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -17,7 +17,7 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, '../../test-results')))
 
 // Initialize Bluetooth simulator
-const bluetoothServer = createBluetoothServer(app)
+// const bluetoothServer = createBluetoothServer(app)
 
 // Routes
 app.get('/', (req: Request, res: Response) => {

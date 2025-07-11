@@ -370,8 +370,8 @@ describe('TrustRegistryClient', () => {
 
     it('should have proper metadata structure', () => {
       expect(defaultTrustRegistry.version).toBe('1.0.0');
-      expect(defaultTrustRegistry.metadata.name).toBe('ov-id-sdk Default Trust Registry');
-      expect(defaultTrustRegistry.metadata.source).toBe('ov-id-sdk');
+          expect(defaultTrustRegistry.metadata.name).toBe('open-verifiable-id-sdk Default Trust Registry');
+    expect(defaultTrustRegistry.metadata.source).toBe('open-verifiable-id-sdk');
       expect(defaultTrustRegistry.metadata.maintainer).toBe('OriginVault');
     });
   });

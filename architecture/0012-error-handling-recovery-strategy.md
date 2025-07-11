@@ -1,6 +1,6 @@
 ---
 ADR: 0012
-Title: ov-id-sdk Error Handling & Recovery Strategy
+Title: open-verifiable-id-sdk Error Handling & Recovery Strategy
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-The ov-id-sdk handles complex identity operations across multiple networks, storage systems, and cryptographic processes. Errors can occur at many layers - network connectivity, blockchain operations, cryptographic failures, storage issues, and user input validation. Currently, error handling is inconsistent across different SDK modules, making it difficult for developers to build robust applications and for users to understand and recover from failures.
+The open-verifiable-id-sdk handles complex identity operations across multiple networks, storage systems, and cryptographic processes. Errors can occur at many layers - network connectivity, blockchain operations, cryptographic failures, storage issues, and user input validation. Currently, error handling is inconsistent across different SDK modules, making it difficult for developers to build robust applications and for users to understand and recover from failures.
 
 The SDK needs a comprehensive error handling strategy that provides:
 - Predictable error types and structures

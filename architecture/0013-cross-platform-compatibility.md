@@ -1,6 +1,6 @@
 ---
 ADR: 0013
-Title: ov-id-sdk Cross-Platform Compatibility
+Title: open-verifiable-id-sdk Cross-Platform Compatibility
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-The ov-id-sdk must function consistently across diverse runtime environments including Node.js servers, web browsers, React Native mobile apps, and potentially Electron desktop applications. Each platform has unique constraints around cryptographic APIs, storage mechanisms, networking capabilities, and security models. 
+The open-verifiable-id-sdk must function consistently across diverse runtime environments including Node.js servers, web browsers, React Native mobile apps, and potentially Electron desktop applications. Each platform has unique constraints around cryptographic APIs, storage mechanisms, networking capabilities, and security models. 
 
 Currently, the SDK primarily targets Node.js environments, but adoption requires supporting the full spectrum of JavaScript runtimes where identity operations are needed. Platform-specific differences in WebCrypto APIs, storage availability, and security contexts create implementation challenges that must be addressed systematically.
 
@@ -234,7 +234,7 @@ interface StorageProvider {
 class NodeStorageProvider implements StorageProvider {
   private storageDir: string;
 
-  constructor(storageDir = path.join(os.homedir(), '.ov-id-sdk')) {
+  constructor(storageDir = path.join(os.homedir(), '.open-verifiable-id-sdk')) {
     this.storageDir = storageDir;
     fs.mkdirSync(storageDir, { recursive: true });
   }
@@ -344,7 +344,7 @@ module.exports = [
 #### Package.json Distribution Strategy
 ```json
 {
-  "name": "@originvault/ov-id-sdk",
+      "name": "@openverifiable/open-verifiable-id-sdk",
   "main": "./dist/node/index.js",
   "browser": "./dist/browser/index.js",
   "react-native": "./dist/react-native/index.js",

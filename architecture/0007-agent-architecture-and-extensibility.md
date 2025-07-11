@@ -1,6 +1,6 @@
 ---
 ADR: 0007
-Title: ov-id-sdk Agent Architecture and Extensibility
+Title: open-verifiable-id-sdk Agent Architecture and Extensibility
 Date: 2025-01-14
 Status: Proposed
 Priority: MVP
@@ -20,7 +20,7 @@ Runbook: |
 
 ## Context
 
-The ov-id-sdk must support a wide range of DID methods, credential types, and cryptographic primitives. A modular, extensible agent architecture is required to enable rapid innovation, community contributions, and integration with evolving standards. This architecture should allow new plugins to be added with minimal friction and maximum security.
+The open-verifiable-id-sdk must support a wide range of DID methods, credential types, and cryptographic primitives. A modular, extensible agent architecture is required to enable rapid innovation, community contributions, and integration with evolving standards. This architecture should allow new plugins to be added with minimal friction and maximum security.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ The ov-id-sdk must support a wide range of DID methods, credential types, and cr
 
 #### Agent Core Interface
 ```typescript
-interface OvIdAgent {
+interface OpenVerifiableAgent {
   registerPlugin(plugin: AgentPlugin): void;
   getPlugin(name: string): AgentPlugin | undefined;
   listPlugins(): AgentPlugin[];
@@ -72,8 +72,8 @@ interface AgentPlugin {
   name: string;
   version: string;
   type: 'did-method' | 'credential-type' | 'crypto-suite' | 'utility';
-  register(agent: OvIdAgent): void;
-  unregister?(agent: OvIdAgent): void;
+  register(agent: OpenVerifiableAgent): void;
+  unregister?(agent: OpenVerifiableAgent): void;
   getInfo(): PluginInfo;
 }
 
@@ -135,7 +135,7 @@ interface PluginInfo {
 ## Business Impact
 - **Required for MVP**: Modular agent is foundational for SDK adoption
 - **Ecosystem Growth**: Plugin model enables rapid ecosystem expansion
-- **Competitive Advantage**: Extensible, secure agent differentiates ov-id-sdk
+- **Competitive Advantage**: Extensible, secure agent differentiates open-verifiable-id-sdk
 
 ## Mission Alignment & Principle Coverage
 - **Creator First, Always**: Enables creators to use the best tools for their needs

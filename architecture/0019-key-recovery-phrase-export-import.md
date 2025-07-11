@@ -120,7 +120,7 @@ export class SecureStorageImpl implements SecureStorage {
 All agent types inherit export/import capabilities through the BaseAgent class:
 
 ```typescript
-export abstract class BaseAgent implements OVAgent {
+export abstract class BaseAgent implements OpenVerifiableAgent {
   // Export/Import methods available to all agent types
   async exportAgentKey(keyId: string, format: 'base64' | 'hex'): Promise<string> {
     return await this.secureStorage.exportKey(keyId, format);

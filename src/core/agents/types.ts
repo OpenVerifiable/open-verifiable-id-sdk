@@ -3,12 +3,95 @@
  * 
  * Implements the agent configuration schema and interfaces for agent management
  * Based on ADR-0007: Agent Architecture and Extensibility
+ * Extended with ADR-0046: Monetized Plugin Installation Architecture
  */
 
-import { AgentType } from '../../types';
+// Removed import of AgentType to avoid conflict; using local export below
+
+export enum AgentType {
+  USER = 'user',
+  PACKAGE = 'package',
+  PARENT = 'parent',
+  SERVICE = 'service',
+}
+
+/**
+ * Plugin monetization configuration
+ */
+export interface PluginMonetizationConfig {
+  /** Whether the plugin requires a license */
+  requiresLicense: boolean;
+  /** Type of license required */
+  licenseType: 'free' | 'paid' | 'subscription';
+  /** Price information for paid plugins */
+  price?: {
+    amount: number;
+    currency: string;
+    description?: string;
+  };
+  /** DID-Linked Resource for status list management */
+  statusListDID?: string;
+  /** Index in the status list for this license */
+  statusListIndex?: number;
+  /** License validity period in days */
+  validityPeriod?: number;
+}
+
+/**
+ * Plugin license verification configuration
+ */
+export interface PluginLicenseVerification {
+  /** Cached license credential for offline execution */
+  cachedLicense?: CachedPluginLicense;
+  /** Last verification timestamp */
+  lastVerified?: string;
+  /** Whether verification is required for execution */
+  verificationRequired: boolean;
+  /** Verification interval in hours */
+  verificationInterval?: number;
+}
+
+/**
+ * Cached plugin license for offline execution
+ */
+export interface CachedPluginLicense {
+  /** License credential ID */
+  credentialId: string;
+  /** Issuer DID */
+  issuerDID: string;
+  /** License type */
+  licenseType: string;
+  /** Expiration date */
+  expiresAt: string;
+  /** Cached verification proof */
+  verificationProof: string;
+  /** Cache timestamp */
+  cachedAt: string;
+  /** Usage count since last verification */
+  usageCount: number;
+  /** Maximum offline usage before verification required */
+  maxOfflineUsage: number;
+}
+
+// Per-plugin security configuration
+export interface PluginSecurityConfig {
+  /** Whether the plugin should run in a sandboxed environment */
+  sandboxed?: boolean;
+  /** List of permissions granted to the plugin */
+  permissions?: string[];
+}
+
+// Per-plugin lifecycle configuration
+export interface PluginLifecycleConfig {
+  /** Whether the plugin should be auto-enabled on agent startup */
+  autoEnable?: boolean;
+  /** Whether the plugin should be lazy-loaded */
+  lazyLoad?: boolean;
+}
 
 /**
  * Plugin configuration for agent plugins
+ * Extended with monetization support
  */
 export interface AgentPluginConfig {
   /** Plugin name identifier */
@@ -21,6 +104,18 @@ export interface AgentPluginConfig {
   config?: Record<string, any>;
   /** Whether the plugin is enabled */
   enabled?: boolean;
+  
+  // Monetization fields (ADR-0046)
+  /** Monetization configuration */
+  monetization?: PluginMonetizationConfig;
+  /** License verification configuration */
+  licenseVerification?: PluginLicenseVerification;
+
+  // New: Per-plugin security and lifecycle
+  /** Security configuration for this plugin */
+  security?: PluginSecurityConfig;
+  /** Lifecycle configuration for this plugin */
+  lifecycle?: PluginLifecycleConfig;
 }
 
 /**

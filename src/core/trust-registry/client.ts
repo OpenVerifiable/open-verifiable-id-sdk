@@ -57,9 +57,18 @@ export interface TrustRegistryProvider {
   isAvailable(): Promise<boolean>;
 }
 
+import { CheqdTrustChainClient, PluginEcosystemTrustChain, TrustChainVerificationResult } from './cheqd-trust-chain.js';
+
 export class TrustRegistryClient {
   private trustedIssuers: Map<string, TrustMetadata> = new Map();
   private providers: Map<string, TrustRegistryProvider> = new Map();
+  private cheqdTrustChain?: CheqdTrustChainClient;
+
+  constructor(options?: {
+    cheqdTrustChain?: CheqdTrustChainClient;
+  }) {
+    this.cheqdTrustChain = options?.cheqdTrustChain;
+  }
 
   /**
    * Add a trusted issuer to the local registry
@@ -210,6 +219,48 @@ export class TrustRegistryClient {
   }
 
   /**
+   * Verify plugin creator against Cheqd trust chain
+   */
+  async verifyPluginCreatorTrustChain(
+    creatorDID: string,
+    ecosystemChain: PluginEcosystemTrustChain
+  ): Promise<TrustChainVerificationResult> {
+    if (!this.cheqdTrustChain) {
+      throw new Error('Cheqd Trust Chain client not configured');
+    }
+
+    return await this.cheqdTrustChain.verifyPluginCreator(creatorDID, ecosystemChain);
+  }
+
+  /**
+   * Create plugin creator accreditation
+   */
+  async createPluginCreatorAccreditation(
+    creatorDID: string,
+    platformDID: string,
+    ecosystemChain: PluginEcosystemTrustChain,
+    scope: string[]
+  ): Promise<any> {
+    if (!this.cheqdTrustChain) {
+      throw new Error('Cheqd Trust Chain client not configured');
+    }
+
+    return await this.cheqdTrustChain.createCreatorAccreditation(
+      creatorDID,
+      platformDID,
+      ecosystemChain,
+      scope
+    );
+  }
+
+  /**
+   * Configure Cheqd trust chain client
+   */
+  setCheqdTrustChain(cheqdTrustChain: CheqdTrustChainClient): void {
+    this.cheqdTrustChain = cheqdTrustChain;
+  }
+
+  /**
    * Convert trust registry to CSV format
    */
   private convertToCSV(issuers: TrustedIssuer[]): string {
@@ -247,9 +298,9 @@ export const defaultTrustRegistry: TrustRegistry = {
     }
   ],
   metadata: {
-    name: 'ov-id-sdk Default Trust Registry',
-    description: 'Default trusted issuers for ov-id-sdk',
-    source: 'ov-id-sdk',
+          name: 'open-verifiable-id-sdk Default Trust Registry',
+      description: 'Default trusted issuers for open-verifiable-id-sdk',
+      source: 'open-verifiable-id-sdk',
     maintainer: 'OriginVault'
   }
 }; 

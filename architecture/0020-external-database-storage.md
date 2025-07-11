@@ -275,7 +275,7 @@ export class HybridSecureStorage implements SecureStorage {
 
   constructor(
     encryptionKey?: string,
-    agent?: OVAgent,
+    agent?: OpenVerifiableAgent,
     externalConfig?: ExternalDatabaseConfig
   ) {
     this.localStorage = createSecureStorage(encryptionKey, agent);
